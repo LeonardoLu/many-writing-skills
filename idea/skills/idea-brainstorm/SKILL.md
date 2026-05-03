@@ -61,6 +61,22 @@ description: >-
 - 第二轮起追加内容时，**不修改** brainstorm.md 的 frontmatter
 - 状态升级只发生在 `idea.md`：仅当其状态当前是 `seed` 时升级为 `lab`，详见上面"步骤"
 
+## frontmatter / aliases 行为
+
+按 [docs/aliases.md](../../docs/aliases.md)：
+
+- 首次创建 `brainstorm.md` 时，写入 `aliases: [<idea-name> · brainstorm]`；`<idea-name>` 取自当前工作区目录名，`<kind>` 写死为 `brainstorm`
+- 追加新一轮时**不动** aliases
+- 不修改 `idea.md` 等其它文件的 aliases
+- alias 不基于 idea.md 的 H1，无需读取 H1
+
+## 链接行为
+
+按 [docs/links.md](../../docs/links.md)，brainstorm 中的常见用法：
+
+- 顶部"关联："已经覆盖了与 idea.md 的文档级关联，正文里再次提及命题时**不必**再链
+- 跨轮引用：本轮"反例与反驳 / 类比与对照"里若指涉前几轮某个角度，用 `[[ideas/<idea-name>/brainstorm#第 N 轮]]` 锚点形式
+
 ## 边界（强制）
 
 - **只允许修改 `ideas/<idea-name>/` 目录下的文件**，绝对不可以修改这个目录之外的任何文件（包括其他 idea 的目录、`knowledge/`、`tasks/`、`work/` 等）

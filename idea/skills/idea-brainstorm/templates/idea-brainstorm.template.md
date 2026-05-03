@@ -3,6 +3,8 @@ tags:
   - idea
   - idea/brainstorm
   - idea/workspace/<idea-name>
+aliases:
+  - <idea-name> · brainstorm
 ---
 
 # <Idea Title> 探索

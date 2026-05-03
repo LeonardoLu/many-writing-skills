@@ -58,6 +58,24 @@ description: >-
 - "末尾追加新一节"时**不动** frontmatter
 - 状态升级只发生在 `idea.md`，规则见上面"步骤"
 
+## frontmatter / aliases 行为
+
+按 [docs/aliases.md](../../docs/aliases.md)：
+
+- 首次创建 `plan.md` 时，写入 `aliases: [<idea-name> · plan]`；`<idea-name>` 取自当前工作区目录名，`<kind>` 写死为 `plan`
+- "覆盖重新出一版"时 aliases 保持不变
+- "末尾追加新一节"时**不动** aliases
+- 不修改 `idea.md` 的 aliases
+- alias 不基于 idea.md 的 H1，无需读取 H1
+
+## 链接行为
+
+按 [docs/links.md](../../docs/links.md)，plan 中的常见用法：
+
+- "关键风险与未解问题"每条若来源于 conclusion 的"仍然开放的问题"或 research 的"被挑战的结论"，用 `[[ideas/<idea-name>/conclusion#仍然开放的问题]]` / `[[ideas/<idea-name>/research#…]]` 锚点指回
+- 目标 / 行动项 / 里程碑本身**不必**逐条加 wikilink——它们是新的承诺，不是引用
+- 顶部"关联："已覆盖文档级关联，正文不必再次链 idea / conclusion
+
 ## 写作要求
 
 - 行动项必须可执行：动词起头、有明确产出或验收标准；模糊的"想想 X"不算行动项

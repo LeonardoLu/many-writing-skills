@@ -4,6 +4,8 @@ tags:
   - idea/seed
   - idea/workspace/<idea-name>
   - idea/status/seed
+aliases:
+  - <idea-name> · seed
 ---
 
 # <一句话设想>

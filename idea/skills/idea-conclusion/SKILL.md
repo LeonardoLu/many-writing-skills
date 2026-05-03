@@ -54,6 +54,24 @@ description: >-
 - "末尾追加新一节"模式下，**完全不动** frontmatter
 - 状态升级只发生在 `idea.md`，规则见上面"步骤"
 
+## frontmatter / aliases 行为
+
+按 [docs/aliases.md](../../docs/aliases.md)：
+
+- 首次创建 `conclusion.md` 时，写入 `aliases: [<idea-name> · conclusion]`；`<idea-name>` 取自当前工作区目录名，`<kind>` 写死为 `conclusion`
+- "覆盖重新出一版"时 aliases 保持不变（重新写入相同值即可）
+- "末尾追加新一节"时**不动** aliases
+- 不修改 `idea.md` 的 aliases
+- alias 不基于 idea.md 的 H1，无需读取 H1
+
+## 链接行为
+
+按 [docs/links.md](../../docs/links.md)，conclusion 是**链接密度最高**的文件之一：
+
+- "重点 / 已有结论"每条都有"来源：…"标注，**强烈建议**把来源写成 `（来源：[[ideas/<idea-name>/brainstorm#第 N 轮]]）` 锚点形式
+- "仍然开放的问题"如果某条来自具体某轮 brainstorm 的反问，同样用锚点引用源
+- 顶部"关联："已经覆盖与 idea / brainstorm 的文档级关联，正文不必重复链
+
 ## 写作要求
 
 - 语言要"收敛"：不要再发散，不要再抛新反问（那是 brainstorm 的事）

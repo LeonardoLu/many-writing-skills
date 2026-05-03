@@ -20,6 +20,7 @@
 ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 ├── idea.md         ← idea-create     初始命题、反方观点、相邻问题
 ├── brainstorm.md   ← idea-brainstorm  多轮脑暴（追加）
+├── clarify.md      ← idea-clarify    逐项确认含糊点的决定记录（追加）
 ├── conclusion.md   ← idea-conclusion  收敛后的稳定结论
 ├── research.md     ← idea-research    外部资料、论据、反例（追加）
 ├── plan.md         ← idea-plan        可执行规划：目标、里程碑、行动项
@@ -28,12 +29,13 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 
 **所有 idea-\* skill 强制只能写自己 idea 的目录**，绝不会动 `ideas/<其他 idea>/`、`knowledge/`、`tasks/` 等任何别处。
 
-## 六个 skill 速查表
+## 七个 skill 速查表
 
 | Skill              | 触发用语示例                                     | 写到哪里               | 模式            |
 | ------------------ | ------------------------------------------------ | ---------------------- | --------------- |
 | `idea-create`      | "我想到一个设想…"、"记一下这个 idea"             | 新建 `idea.md`         | 新建            |
 | `idea-brainstorm`  | "对这个想法脑暴一下"、"再来一轮"                 | `brainstorm.md`        | **追加**（多轮）|
+| `idea-clarify`     | "clarify 一下"、"逐个问我确认"、"把这些点拍板"   | `clarify.md`           | **追加**（多轮）|
 | `idea-conclusion`  | "总结一下"、"拉个结论"                           | `conclusion.md`        | 整体覆盖 / 追加 |
 | `idea-research`    | "查查相关资料"、"找点论据"、"research 一下"      | `research.md`          | **追加**（多轮）|
 | `idea-plan`        | "做个执行计划"、"我想动手了"                     | `plan.md`              | 整体覆盖 / 追加 |
@@ -71,6 +73,8 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 idea-create   →  idea.md           记下命题
    ↓
 idea-brainstorm × N 轮  →  brainstorm.md   多视角发散 + 反问挖思维
+   ↓
+（可选）idea-clarify × N 轮  →  clarify.md   逐项追问 + 推荐选项 + 用户拍板
    ↓
 idea-conclusion  →  conclusion.md   收敛重点和已成立的结论
    ↓
@@ -120,6 +124,24 @@ idea-plan   →  plan.md          目标 + 里程碑 + 行动项
 **怎么触发**："脑暴一下"、"展开"、"再来一轮"、"深入讨论这个设想"。
 
 **提示**：跑了 ≥ 3 轮之后，AI 会建议你跑一次 `idea-summary` 留档。
+
+### idea-clarify — 逐项把含糊点拍板
+
+**输入**：idea 名 +（可选）关注范围（"先聚焦 brainstorm 第 2 轮的反问"、"只问受众和作用域"）。
+
+**做什么**：
+
+- 读取该 idea 下所有现有文件，归纳出本轮 3–7 个待确认点（优先级：brainstorm 的反问 > conclusion 的开放问题 > idea.md 的相邻问题 > 隐含决策）
+- 先把"待确认清单"亮给你，让你可以删减 / 调整顺序
+- **逐项**进行：每次只问一个，每问一项之前都给你呈现 ①问题 ②2–4 个选项 + 每个选项的差异和取舍 ③推荐答案 ④落到本 idea 具体语境的理由
+- 等你回答（接受推荐 / 选别的 / 给自定义答案 / 跳过），把你最终的决定 + 理由写进 `clarify.md`
+- 用户没明确回答前**不会**替你拍板；跳过的项进"本轮未拍板"列表
+
+**怎么触发**："clarify 一下"、"逐个问我确认"、"把这些点拍板"、"帮我把含糊的地方确认掉"。
+
+**和 brainstorm 的区别**：brainstorm 是**发散**（抛反问，挖你没说出来的判断），clarify 是**收敛决策**（带选项 + 推荐，逼你表态）。一个挖问题，一个挖答案。
+
+**和 conclusion 的区别**：conclusion 是把已经稳定的判断成文，clarify 是把还没拍板的具体决策点逐一拍下来。conclusion 的输入越稳，越好写——所以 brainstorm 多轮之后先 clarify 一下，再 conclusion，往往效果更好。
 
 ### idea-conclusion — 收敛已有结论
 
@@ -207,6 +229,23 @@ idea-plan   →  plan.md          目标 + 里程碑 + 行动项
 
 > 因为 `<idea-name>` 会进入 tag，目录名必须**字母开头**、只含字母数字 `-` `_`，不能纯数字。`idea-create` 在生成目录名时会自动遵守这条。
 
+## alias 显示（用于 Obsidian Bases / Quick Switcher）
+
+文件名（`idea.md / brainstorm.md / ...`）是固定的通用名。在 Obsidian Bases 视图、Quick Switcher、`[[` 自动补全、反向链接里只看到这种通用名很难分辨"这是哪个 idea 的哪个文件"。
+
+为此每个文件 frontmatter 里同时写入 `aliases`，形式固定为 `<idea-name> · <kind>`（kebab-case 英文 + 英文 kind），例如：
+
+```yaml
+aliases:
+  - multi-agent-brainstorm · brainstorm
+```
+
+`<idea-name>` 与目录名一致，`<kind>` 取 `seed / brainstorm / conclusion / research / plan / summary` 之一（与文件类型 tag `idea/<kind>` 同段）。完整规则见 [docs/aliases.md](docs/aliases.md)。
+
+## 文件之间的 wikilink
+
+idea workspace 内多个文件之间按需用 `[[ideas/<idea-name>/conclusion#已有结论]]` 这类 wikilink 互相指涉——主要用在"来源标注"、"下次继续从哪开始"、"重要锚点"等位置。何时该链、何时不该链的判断准则见 [docs/links.md](docs/links.md)。
+
 ## 安装
 
 idea 系列是一个自包含 skill 组：
@@ -216,7 +255,9 @@ many-writing-skills/idea/
 ├── README.md       ← 你正在看
 ├── AGENTS.md       ← 给修改本组源码的 agent / 协作者看
 ├── docs/
-│   └── tag-system.md   ← idea 系列 tag 命名空间与状态机规范
+│   ├── tag-system.md   ← idea 系列 tag 命名空间与状态机规范
+│   ├── aliases.md      ← idea 系列 frontmatter aliases 字段约定
+│   └── links.md        ← idea 系列 wikilink 使用指引
 ├── skills/         ← 6 个 SKILL.md + 各自 templates
 └── scripts/        ← 安装、校验、vault 准备脚本
 ```

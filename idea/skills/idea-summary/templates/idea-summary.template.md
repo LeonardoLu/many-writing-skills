@@ -3,6 +3,8 @@ tags:
   - idea
   - idea/summary
   - idea/workspace/<idea-name>
+aliases:
+  - <idea-name> · summary
 ---
 
 # <Idea Title> 阶段快照

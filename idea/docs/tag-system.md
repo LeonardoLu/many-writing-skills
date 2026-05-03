@@ -46,6 +46,7 @@ tags:
 | --- | --- | --- |
 | `idea.md` | `idea/seed` | idea-create |
 | `brainstorm.md` | `idea/brainstorm` | idea-brainstorm |
+| `clarify.md` | `idea/clarify` | idea-clarify |
 | `conclusion.md` | `idea/conclusion` | idea-conclusion |
 | `research.md` | `idea/research` | idea-research |
 | `plan.md` | `idea/plan` | idea-plan |
@@ -70,7 +71,7 @@ tags:
 | state | 含义 | 谁会把状态推到这个值 |
 | --- | --- | --- |
 | `seed` | 刚创建 | idea-create（初值） |
-| `lab` | 已在被脑暴 / 调研推进 | idea-brainstorm；idea-research（仅当当前是 seed） |
+| `lab` | 已在被脑暴 / 调研 / 拍板推进 | idea-brainstorm；idea-research（仅当当前是 seed）；idea-clarify（仅当当前是 seed） |
 | `concluded` | 已收敛过结论 | idea-conclusion |
 | `planned` | 已生成可执行规划 | idea-plan |
 | `dropped` | 用户决定放弃 | 用户手工，或显式声明放弃时 |
@@ -94,6 +95,7 @@ skill 在更新状态 tag 时遵守：
 
 - **idea-create**：写 idea.md 时初值设为 `seed`
 - **idea-brainstorm**：若当前是 `seed`，升级为 `lab`；其他不变
+- **idea-clarify**：若当前是 `seed`，升级为 `lab`；其他不变
 - **idea-conclusion**：若当前是 `seed` / `lab`，升级为 `concluded`；`planned` 不动
 - **idea-research**：若当前是 `seed`，升级为 `lab`；其他不变
 - **idea-plan**：升级为 `planned`（除非当前是 `dropped`）
@@ -166,6 +168,17 @@ tags:
 ---
 ```
 
+### clarify.md
+
+```yaml
+---
+tags:
+  - idea
+  - idea/clarify
+  - idea/workspace/topic-based-weekly-report
+---
+```
+
 ### conclusion.md
 
 ```yaml
@@ -229,6 +242,7 @@ tags:
 
 ## 兼容性
 
-- frontmatter 中允许同时存在其他属性（例如 `aliases`、`status`、用户自定义字段）；skill 不动它们
+- frontmatter 中允许同时存在其他属性（例如 `status`、用户自定义字段）；skill 不动它们
+- `aliases` 字段是个**例外**：它由本组 skill **主动写入**（用于 Obsidian Bases / Quick Switcher 显示中文命题），规则见 [docs/aliases.md](aliases.md)
 - 如果用户手工把某个 `idea/...` tag 删了，skill 在下一次写入 / 更新时会**补回**应有的那几个，不报错
 - 如果用户加了不在白名单里的 `idea/xxx` tag，skill 不会主动清理（兼顾用户自定义空间）

@@ -3,6 +3,8 @@ tags:
   - idea
   - idea/conclusion
   - idea/workspace/<idea-name>
+aliases:
+  - <idea-name> · conclusion
 ---
 
 # <Idea Title> 结论

@@ -76,6 +76,21 @@ tags:
 
 替换 `<idea-name>` 为本次实际生成的目录名。这是 idea.md 第一次出现，初始状态为 `seed`。
 
+## frontmatter / aliases 行为
+
+按 [docs/aliases.md](../../docs/aliases.md)：
+
+- 写入 `idea.md` 时，frontmatter 含 `aliases: [<idea-name> · seed]`
+- `<idea-name>` 与本次生成的目录名完全一致（kebab-case 英文）；`<kind>` 写死为 `seed`
+- alias 不基于 idea.md 的中文 H1；用户改 H1 不影响 alias，skill 也不主动同步
+
+## 链接行为
+
+按 [docs/links.md](../../docs/links.md)：
+
+- idea.md 是入口文件，**通常不需要插 wikilink**——它没有可指涉的"上文"
+- 例外：如果用户提供的"上下文（来源）"明确是 vault 内的某个笔记，可以在"来源"行写成 `[[来源笔记]]`，但不要跨 idea workspace 链到其它 `ideas/<other>/...`
+
 ## 状态字段
 
 状态在文件中有两处呈现，写入时保持一致：

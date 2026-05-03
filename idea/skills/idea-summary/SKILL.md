@@ -63,6 +63,22 @@ description: >-
 - 第二段起追加内容时，**不修改** summary.md 的 frontmatter
 - **不修改** `idea.md` 的状态 tag（summary 是日志而非阶段切换）
 
+## frontmatter / aliases 行为
+
+按 [docs/aliases.md](../../docs/aliases.md)：
+
+- 首次创建 `summary.md` 时，写入 `aliases: [<idea-name> · summary]`；`<idea-name>` 取自当前工作区目录名，`<kind>` 写死为 `summary`
+- 追加新一段时**不动** aliases
+- 不修改 `idea.md` 等其它文件的 aliases
+- alias 不基于 idea.md 的 H1，无需读取 H1
+
+## 链接行为
+
+按 [docs/links.md](../../docs/links.md)，summary 是**链接密度最高**的文件，下列两节强烈建议每条都带锚点：
+
+- "下次继续从哪开始"：每条动作必须带具体落点，例如"打开 [[ideas/<idea-name>/brainstorm#第 3 轮]] 的反问 X 继续答"
+- "重要锚点"：模板已有"上次脑暴 / 最新结论 / 最新规划"三条，按实际跑到的轮 / 章节填具体锚点
+
 ## 写作要求
 
 - 控制篇幅：每段快照不超过 30 行；目标是"扫一眼能回忆起"，不是再写一份长结论

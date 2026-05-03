@@ -3,6 +3,8 @@ tags:
   - idea
   - idea/research
   - idea/workspace/<idea-name>
+aliases:
+  - <idea-name> · research
 ---
 
 # <Idea Title> 调研

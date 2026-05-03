@@ -63,6 +63,23 @@ description: >-
 - 第二轮起追加内容时，**不修改** research.md 的 frontmatter
 - 状态升级只发生在 `idea.md`，规则见上面"步骤"
 
+## frontmatter / aliases 行为
+
+按 [docs/aliases.md](../../docs/aliases.md)：
+
+- 首次创建 `research.md` 时，写入 `aliases: [<idea-name> · research]`；`<idea-name>` 取自当前工作区目录名，`<kind>` 写死为 `research`
+- 追加新一轮时**不动** aliases
+- 不修改 `idea.md` 等其它文件的 aliases
+- alias 不基于 idea.md 的 H1，无需读取 H1
+
+## 链接行为
+
+按 [docs/links.md](../../docs/links.md)，research 中的常见用法：
+
+- 每条材料的"对本 idea：…"短点评里，如果本条材料**直接挑战或支撑**了 conclusion 中的某条具体结论，写成 `[[ideas/<idea-name>/conclusion#已有结论]]`
+- 末尾"对结论的影响"小结里，"被挑战的结论 / 更稳的结论"逐条用锚点指向 conclusion 的对应段
+- 外部 URL 用普通 markdown 链接 `[标题](URL)`（不是 wikilink）；wikilink 只在 vault 内部使用
+
 ## 写作要求
 
 - 不杜撰来源；如果联网受限或检索失败，明确写出"本轮未能拉到外部材料"，不要伪造 URL

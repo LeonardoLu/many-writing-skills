@@ -3,6 +3,8 @@ tags:
   - idea
   - idea/plan
   - idea/workspace/<idea-name>
+aliases:
+  - <idea-name> · plan
 ---
 
 # <Idea Title> 规划

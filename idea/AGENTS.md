@@ -16,7 +16,9 @@ many-writing-skills/idea/
 ├── AGENTS.md                ← 本文件
 ├── README.md                ← 面向使用者的介绍
 ├── docs/
-│   └── tag-system.md        ← idea 系列 tag 体系规范（本组 markdown 元数据的唯一来源）
+│   ├── tag-system.md        ← idea 系列 tag 命名空间与状态机规范
+│   ├── aliases.md           ← idea 系列 frontmatter aliases 字段约定
+│   └── links.md             ← idea 系列 wikilink 使用指引
 ├── skills/
 │   ├── idea-create/
 │   │   ├── SKILL.md         ← skill 指令
@@ -25,6 +27,9 @@ many-writing-skills/idea/
 │   ├── idea-brainstorm/
 │   │   ├── SKILL.md
 │   │   └── templates/idea-brainstorm.template.md
+│   ├── idea-clarify/
+│   │   ├── SKILL.md
+│   │   └── templates/idea-clarify.template.md
 │   ├── idea-conclusion/
 │   │   ├── SKILL.md
 │   │   └── templates/idea-conclusion.template.md
@@ -51,7 +56,9 @@ many-writing-skills/idea/
 | --- | --- |
 | 调整某个 skill 的指令、步骤、边界 | `skills/<skill>/SKILL.md` |
 | 调整某个 skill 的输出文档结构 | `skills/<skill>/templates/<skill>.template.md`（可能还要顺手调对应 SKILL.md 中的"输出模板"段） |
-| 改动 idea 系列 tag 命名空间 / 状态机 | `docs/tag-system.md` 必改；6 个 SKILL.md + 6 个 template 的 frontmatter 需同步更新 |
+| 改动 idea 系列 tag 命名空间 / 状态机 | `docs/tag-system.md` 必改；7 个 SKILL.md + 7 个 template 的 frontmatter 需同步更新 |
+| 改动 aliases 字段形式 / kind 表 | `docs/aliases.md` 必改；7 个 template 的 frontmatter 与 7 个 SKILL.md 的"frontmatter / aliases 行为"段需同步更新 |
+| 改动 wikilink 使用指引 | `docs/links.md` 必改；如指引涉及具体 skill 的链接重点，顺手更新对应 SKILL.md 的"链接行为"段 |
 | 加 / 删一个 skill | `skills/<skill>/`（含 SKILL.md + templates）+ `README.md` 速查表 + `docs/tag-system.md`（如果有新 tag）|
 | 调整安装、校验流程 | `scripts/{install,check,prepare-vault}.sh` |
 | 改动整体介绍 | `README.md` |
@@ -71,12 +78,16 @@ many-writing-skills/idea/
 
 去掉 / 弱化这条等于让 skill 越界，是禁止的。
 
+每个 SKILL.md 还**必须保留** `## frontmatter / tag 行为`、`## frontmatter / aliases 行为`、`## 链接行为` 三节；它们分别引用 `docs/tag-system.md`、`docs/aliases.md`、`docs/links.md`。三份 docs 是各自命名空间的唯一权威来源，SKILL.md 里写的是"本 skill 的具体动作"，不要在 SKILL.md 里重新定义命名空间或语法。
+
 ## 改动 template 时的硬约束
 
 每个 template 必须：
 
 1. 文件名固定为 `{skill-name}.template.md`，放在 `skills/<skill>/templates/` 下
-2. 第一部分是 YAML frontmatter，按 [docs/tag-system.md](docs/tag-system.md) 写规定的 tag（保留 `<idea-name>` 占位符，由 skill 在写文件时替换）
+2. 第一部分是 YAML frontmatter，必须同时包含：
+   - `tags`：按 [docs/tag-system.md](docs/tag-system.md) 写规定的 tag（保留 `<idea-name>` 占位符，由 skill 在写文件时替换）
+   - `aliases`：按 [docs/aliases.md](docs/aliases.md) 写 `<idea-name> · <kind>` 形式（`<idea-name>` 是占位符，由 skill 在写文件时替换；`<kind>` 与文件类型一一对应、英文、在每个 template 里直接写死）
 3. 不要在 template 中放只对当前一次场景成立的内容；template 是结构骨架，不是示例答案
 
 修改 template 一般要顺手做：
