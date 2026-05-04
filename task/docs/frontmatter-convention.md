@@ -57,6 +57,7 @@ TaskStatus: doing  # ❌ 大写、驼峰，与 YAML 风格不一致
 |---|---|---|---|
 | `task_` | 任务管理套件 | v0.1.0 | [task-schema/v0.1.0.md](task-schema/v0.1.0.md) |
 | `idea_` | idea 工作区套件 | （由 idea-* 套件维护） | — |
+| `info_` | info 信息摄入套件 | v0.x.x 自由期 | [../../../info/skills/info-intake/SKILL.md](../../../info/skills/info-intake/SKILL.md) |
 
 新增登记示例：
 

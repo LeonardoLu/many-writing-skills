@@ -2,7 +2,7 @@
 
 VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 
-> 本模板由 `info-intake` skill 在 `--depth=deep` 档位调用。**目标**：把一条值得展开的内容做成"要点 + 反方 + 与既有笔记关系"的深度产物，仍然落到 `<vault>/info/inbox/<YYYY-MM>/<slug>.md`（与 quick 同位置，靠 `depth: deep` 字段区分）。
+> 本模板由 `info-intake` skill 在 `--depth=deep` 档位调用。**目标**：把一条值得展开的内容做成"要点 + 反方 + 与既有笔记关系"的深度产物。**deep 不另起新文件**——同 slug 文件已存在则**就地升级**，与 quick 共用同一份 `<vault>/info/inbox/<YYYY-MM>/<slug>.md`，靠 `info_depth: deep` 字段区分。
 
 ## 输入约定
 
@@ -17,7 +17,10 @@ VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 ### 1. 读词表与 vault 上下文
 
 - 读 `<vault>/info/_taxonomy.md`，记三家族 canonical tag
-- 扫一遍 `<vault>/info/inbox/`（最近 6 个月即可）和 `<vault>/knowledge/notes/`、`<vault>/knowledge/sources/`（如存在），找跟当前内容主题相近的 1-3 条笔记，准备做交叉引用
+- **检查同 slug 文件是否已存在**：`<vault>/info/inbox/<YYYY-MM>/<slug>.md`
+  - 不存在 → 走"新建分支"
+  - 存在（任意 `info_depth`） → 走"就地升级分支"
+- 扫一遍 `<vault>/info/inbox/`（最近 6 个月）和 `<vault>/knowledge/notes/`、`<vault>/knowledge/sources/`（如存在），找跟当前内容主题相近的 1-3 条笔记，准备做交叉引用
 
 ### 2. 提要点（5-10 条）
 
@@ -25,6 +28,7 @@ VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 - 一条 1-3 句中文，能独立读懂
 - 抓**主张 / 事实 / 数据 / 案例**，不抓装饰性句子
 - 对方是「未来翻这条 inbox 的自己」—— 要点要让自己 6 个月后能直接复用，不是给原作者写读后感
+- 要点里如需引用原文金句，金句按双语规则处理（中文意思一句 + `> 原文`）
 
 ### 3. 写反方 / 反例（≥ 1 条）
 
@@ -57,6 +61,7 @@ VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 - **只链接已存在的笔记**；不要凭想象造路径
 - 没有可链接的也写一行：「与既有笔记关系：暂无可关联条目」
 - 上限 5 条；超过就挑最相关的
+- 升级分支下：**不要**反向链接到自己的 quick 旧文件（已合并到本文件，无需自引用）
 
 ### 5. 选标签（VERY IMPORTANT 区域）
 
@@ -64,31 +69,53 @@ VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 
 规则与 quick 完全一致：三家族各 0-2 个，命中不了 Topic / Source 时留空 + 正文末尾备注。
 
-### 6. 拼 frontmatter
+升级分支下：保留 quick 阶段已选的标签；只增不减（除非明显是错配，那就替换成更准的）。
+
+### 6. 起 / 保留 alias
+
+- 新建分支：按 quick 模板规则起一条 `摘录-<原文标题精简版>`
+- 升级分支：**保留** quick 阶段已写的 alias，不重写
+
+### 7. 复评推荐值
+
+deep 模式下**强制复评** `info_recommendation`：
+
+- 读完原文后基于实际内容质量评分（0~5）
+- 升级分支下：覆盖 quick 给的初值（深读后判断更准）
+- 评分约定与 quick 一致（见 SKILL.md 或 quick.md）
+
+### 8. 拼 frontmatter
 
 ```yaml
 ---
-状态: inbox
-上次状态变更日期: <today, YYYY-MM-DD>
+aliases:
+  - 摘录-<原文标题精简版>
 tags:
   - <Topic1>
   - <Source1>
   - <Format1>
-depth: deep
-source_url: <url>           # 仅 URL 入口
-source_path: <相对路径>      # 仅本地文件入口
-summary_quality: low         # 仅当抓回正文 < 200 字
+info_status: inbox
+info_status_updated: <today, YYYY-MM-DD>
+info_depth: deep
+info_recommendation: <0..5, 复评后>
+info_source_url: <url>            # 仅 URL 入口
+info_source_path: <相对路径>      # 仅本地文件入口
+info_summary_quality: low         # 仅当抓回正文 < 200 字
 ---
 ```
 
-deep 产物**不**写 `intent`（v2 路线图占位）。
+deep 产物**不**写 `intent`（v2 路线图占位）；不写中文字段名 / 旧裸字段。
 
-### 7. 拼正文
+升级分支下：保留 quick 阶段已有的 frontmatter，按上面规则**修改字段值**而不是整段重写。`info_status` 不动（仍然 `inbox`，由人工流转）。
+
+### 9. 拼正文
+
+#### 新建分支（同 slug 不存在）
 
 ```markdown
 # <原标题>
 
-> <30 字摘要>（与 quick 同样要求：≤ 30 字 + 动宾结构）
+> <30 字摘要>
 
 ## 要点
 
@@ -110,26 +137,62 @@ deep 产物**不**写 `intent`（v2 路线图占位）。
 
 ## 原文摘录
 
-<原文 / 抓回正文，长则截断保留首尾，中间 `<!-- ...省略 N 字... -->`>
+<按双语规则处理；非中文原文必须中英对照>
 
 ---
 
-⚠ 抓取失败原因：<...>          <!-- 仅 summary_quality: low -->
+⚠ 抓取失败原因：<...>          <!-- 仅 info_summary_quality: low -->
 ⚠ 未命中合适 Topic 标签，待人工补  <!-- 仅 Topic 落空 -->
 ```
 
-### 8. 写入文件
+#### 升级分支（同 slug 已存在）
+
+读取已存在文件，按下面规则修改正文：
+
+| 段落 | 已存在 quick 时 | 已存在 deep 时（二次深读） |
+| --- | --- | --- |
+| 标题 | 保留 | 保留 |
+| 30 字摘要（quote 行） | 保留；只在内容明显跑偏时刷新 | 保留 |
+| 「## 要点」 | **追加**（quick 模板没有这段） | 刷新（不要重复堆叠） |
+| 「## 反方 / 反例」 | **追加** | 刷新 |
+| 「## 与既有笔记关系」 | **追加** | 刷新 |
+| 「## 原文摘录」 | quick 阶段如果直接放了原文段，把它**改写**成双语版（覆盖此段） | 保留或刷新 |
+| 末尾 ⚠ 备注 | 按当前情况保留 / 删除 | 同 |
+
+操作上：保留正文已有内容，按段落定位插入 / 替换；不要把整个文件 rebuild。
+
+#### 双语规则（与 quick 共用）
+
+- 抓回正文 ASCII 比例 > 50% → 视为非中文：所有 quote / 摘抄写成「中文翻译在前 + 原文 quote」
+- 中文原文 → 单语，原样保留
+- 「## 原文摘录」段在 deep 下**必须**按双语规则展开（这是 deep 模板的强约束，不像 quick 可选）
+- 长原文（> 5000 字）保留前后段，中间 `<!-- ...省略 N 字... -->` 截断
+
+### 10. 写入文件
 
 - 写入路径：`<vault>/info/inbox/<YYYY-MM>/<slug>.md`（与 quick 完全相同位置约定）
-- 文件已存在（同 slug 之前 quick 处理过）→ 在 slug 后追加 `-deep`，例如 `2026-05-04-foo.md` 已存在则写 `2026-05-04-foo-deep.md`；**不要**覆盖原 quick 产物
+- **不再使用 `-deep` 后缀**：deep 是同文件就地升级
+- 同 slug 已存在 → 就地修改写回（按上面"升级分支"规则）
+- 同 slug 但**主题不同**（rare） → 追加 `-2` / `-3` 后缀
 
-### 9. 回报用户
+### 11. 回报用户
+
+新建：
 
 ```
 已深读存入：info/inbox/<YYYY-MM>/<slug>.md
 摘要：<30 字摘要>
 要点：<N 条> | 反方：<M 条> | 关联笔记：<K 条>
+推荐：<0..5>
 标签：<列出>
+```
+
+升级（quick → deep）：
+
+```
+就地升级 quick → deep：info/inbox/<YYYY-MM>/<slug>.md
+要点：<N 条> | 反方：<M 条> | 关联笔记：<K 条>
+推荐：<旧值> → <新值>
 ```
 
 ## 常见错配（不要做）
@@ -140,3 +203,8 @@ deep 产物**不**写 `intent`（v2 路线图占位）。
 - ❌ 把整篇原文翻译 / 改写一遍当作"要点"
 - ❌ 自由生成不在 `_taxonomy.md` 里的标签
 - ❌ 用 deep 模板处理"用户没要求深度"的内容（应当走 quick）
+- ❌ 写 `-deep` 后缀文件（已废弃；deep 是同文件就地升级）
+- ❌ 升级分支下把整个 quick 正文删掉重写（应当按段落定位插入 / 替换）
+- ❌ 升级分支下反向 wikilink 自己原来的 quick 文件（同一文件无需自引用）
+- ❌ frontmatter 用中文字段名 / 旧裸字段
+- ❌ 非中文原文摘录段不做双语处理

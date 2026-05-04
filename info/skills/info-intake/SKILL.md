@@ -1,12 +1,13 @@
 ---
 name: info-intake
-description: 把递入的链接、本地 markdown / PDF 或文本片段处理成 info/inbox/YYYY-MM/ 下的一条 markdown 笔记。默认 quick 模式（30 字摘要 + 自动标签 + 入 inbox），显式 --depth=deep 时产出要点 + 反方 + 与既有笔记关系。本人在 chat 中递入「这个链接 / 这篇文章 / 这段话 / 这份 PDF / 这个帖子」并希望"先存下来再说"时调用。
+description: 把递入的链接、本地 markdown / PDF 或文本片段处理成 info/inbox/YYYY-MM/ 下的一条 markdown 笔记。默认 quick 模式（30 字摘要 + 自动标签 + 推荐值 + 入 inbox），显式 --depth=deep 时在同一文件就地升级，追加要点 + 反方 + 与既有笔记关系。本人在 chat 中递入「这个链接 / 这篇文章 / 这段话 / 这份 PDF / 这个帖子」并希望"先存下来再说"时调用。
 ---
 
 # info-intake
 
 > 信息摄入与整理 skills 套件 v1 唯一组件。
 > 关联设计：`lujunhui-2nd-digital-garden/ideas/info-curation-skill-suite/`（idea / brainstorm / clarify / conclusion / research / plan）。
+> 关联约定：`many-writing-skills/task/docs/frontmatter-convention.md`（前缀注册表登记 `info_`）。
 > 状态：v1。triage / research / monitor 三组未做，遇到挑选 / 主题搜集 / 周期拉取的需求 → 提示用户人工处理。
 
 ## 适用场景
@@ -60,7 +61,7 @@ description: 把递入的链接、本地 markdown / PDF 或文本片段处理成
 
 两条路径都必须从 `<vault>/info/_taxonomy.md` 取标签，不允许自由生成。
 
-### 第 3 步：决定文件路径
+### 第 3 步：决定文件路径与单文档演进
 
 文件落到：
 
@@ -75,56 +76,106 @@ description: 把递入的链接、本地 markdown / PDF 或文本片段处理成
   - 本地文件入口：用文件名（去扩展名）转 slug
   - 文本片段入口：让用户起一个或从前 30 字提取关键词
 
+**单文档演进规则**（重要）：
+
+同 slug 文件已存在时，**就地更新**而非新写一份。具体分支：
+
+| 当前档位 | 已存在文件状态 | 行为 |
+| --- | --- | --- |
+| quick | 不存在 | 新建（按 quick 模板） |
+| quick | 已存在（任意档位） | 视作"重新摘录"，刷新摘要 / 标签 / 推荐值；不降级 `info_depth`（quick 不能把 deep 改回 quick） |
+| deep | 不存在 | 新建（按 deep 模板） |
+| deep | 已存在 quick | **升级**：保留正文已有内容，frontmatter `info_depth: quick → deep`，更新 `info_status_updated`，复评 `info_recommendation`，**追加** deep 三段（要点 / 反方 / 与既有笔记关系），原文摘录段按双语规则覆盖 |
+| deep | 已存在 deep | "二次深读"：刷新关键段，不重复堆叠要点；保留历史 |
+
+只有在 slug 撞车但**主题不同**（rare，URL host + title 都重复）时才追加 `-2` / `-3` 后缀。**不再使用 `-deep` 后缀**。
+
 ### 第 4 步：写入
 
-- 把产物写入上一步算出的路径
-- 写完简单回复用户：相对路径 + 一句话摘要 + 命中的标签
+- 新建：把产物写入上一步算出的路径
+- 升级 / 重摘录：读取已存在文件 → 按规则修改 → 写回
+- 写完简单回复用户：相对路径 + 一句话摘要 + 命中的标签 + 推荐值；如果是升级，注明「就地升级 quick → deep」
 - 不要在用户没要求时主动列出 frontmatter 全字段
 
 ## frontmatter schema
 
-quick 产物（必填）：
+所有 info 系列业务字段一律使用 `info_` 前缀（参考 `many-writing-skills/task/docs/frontmatter-convention.md` 规则 2）。`tags` / `aliases` 是 Obsidian 原生字段，不加前缀（规则 1）。
+
+完整字段集：
 
 ```yaml
-状态: inbox
-上次状态变更日期: YYYY-MM-DD
+---
+aliases:
+  - 摘录-<原文标题精简版>     # 必填；标题去站名后缀，保留实义；保留原语言
 tags:
-  - <Topic>
-  - <Source>
-  - <Format>
-depth: quick
+  - <Topic>                  # 来自 _taxonomy.md，可空
+  - <Source>                 # 来自 _taxonomy.md，可空
+  - <Format>                 # 来自 _taxonomy.md，必有
+info_status: inbox            # inbox / 深读队列 / 已读 / 归档 / 丢弃（人工改）
+info_status_updated: YYYY-MM-DD
+info_depth: quick             # quick / deep
+info_recommendation: 3        # 0..5 整数，AI 评分（详见下方约定）
+info_source_url: <url>        # URL 入口
+info_source_path: <相对路径>  # 本地文件入口
+info_summary_quality: low     # 仅当抓回正文 < 200 字
+---
 ```
 
-deep 产物（必填）：
+字段规则：
 
-```yaml
-状态: inbox
-上次状态变更日期: YYYY-MM-DD
-tags:
-  - <Topic>
-  - <Source>
-  - <Format>
-depth: deep
-```
+- `aliases`：永远只放一条 `摘录-<原文标题精简版>`，不要堆多个；标题里有特殊字符（`/` `:` 等）时直接保留
+- `info_status`：v1 默认 `inbox`，AI 不主动改为其它值
+- `info_depth`：quick / deep 两值；deep 模式下就地升级时改为 deep
+- `info_recommendation`：必填整数 0~5；deep 时强制复评覆盖
+- `info_source_*` 二选一，按入口决定写哪个
+- `info_summary_quality`：只在 URL 抓取正文 < 200 字时写
 
-URL 抓取低质条目额外加：
+**推荐值评分约定（写文件时遵循）**：
 
-```yaml
-summary_quality: low
-```
-
-来源标记（强烈建议）：
-
-```yaml
-source_url: <url>          # URL 入口
-source_path: <相对路径>     # 本地文件入口
-```
+- 0：噪声 / 标题党 / 抓不到正文（伴随 `info_summary_quality: low`）
+- 1：泛泛而谈，可丢
+- 2：有 1-2 个 OK 的点但无显著新意
+- 3：有可复用观点 / 案例（默认值）
+- 4：值得回看，含独立视角或反共识
+- 5：极少给出（半年内 < 5 条），主张能改写自己已有思路
 
 **关于 `intent` 字段**：v1 不写值。schema 已在 v2 路线图里登记，目前 frontmatter 完全不出现这个 key。
+
+**v0.x.x 容忍机制**：
+
+- 读老文件（含 `状态` / `depth` / `source_url` 等旧字段）不报错；解读时按"旧名 → 新名"映射
+- 旧 → 新映射：`状态 → info_status`，`上次状态变更日期 → info_status_updated`，`depth → info_depth`，`source_url → info_source_url`，`source_path → info_source_path`，`summary_quality → info_summary_quality`
+- 写新文件 / 升级老文件时一律按新 schema 写齐
+- 不主动批量迁移老文件（只在用户递入相同 slug 走升级流程时顺便迁移那一份）
+- 不动自己不认识的字段（避免误删其它系统 / 未来版本字段）
+
+## 双语引用规则
+
+**当原文不是中文时**，所有正文中的引用 / 摘抄必须中英对照，**中文优先在前**：
+
+```markdown
+### 章节标题 / Section Title
+
+中文翻译 / 概括优先在前（一段或几句，能独立读懂）。
+
+> 原文 quote 在 quote block 里。
+```
+
+判定规则（auto-detect）：
+
+- 抓回正文 ASCII 字符比例 > 50% → 视为非中文，按双语写
+- 中文原文则单语，正常引用即可
+- 同一文档里只判定一次，不混用
+
+具体怎么落地：
+
+- **quick 模式**：正文段如果直接照搬原文（非中文），放到 quote block 里，并在上方加一段中文概括 / 翻译（建议 1-3 句，不要逐字翻译，传达大意）
+- **deep 模式**：「原文摘录」段所有 quote 都按上面格式写；「要点」段本身已经是中文论述，不需要双语；要点里若引用原文金句，金句这一句按双语处理（中文意思 + `> 原文`）
 
 ## 写入边界
 
 - **只允许写入 `<vault>/info/inbox/` 下的内容**
+- 允许就地修改 `<vault>/info/inbox/<YYYY-MM>/<slug>.md`（升级 / 重摘录场景）
 - 不修改 `info/_taxonomy.md`（标签词表是 single source of truth，仅人工编辑）
 - 不修改 `info/dashboard.md`
 - 不动 `info/inbox/` 之外的任何 vault 内容
