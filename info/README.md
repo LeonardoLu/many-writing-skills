@@ -63,29 +63,54 @@ info/                            ← 由 prepare-vault.sh 创建
 
 | 档位     | 触发                                                | 产物                                                                                |
 | -------- | --------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `quick`  | 默认                                                | 30 字摘要 + 三家族标签 + 入 inbox                                                   |
-| `deep`   | 显式 `--depth=deep` 或自然语言（"深读"、"展开"）   | quick 的全部 + 5-10 条要点 + ≥ 1 条反方 / 反例 + 与既有笔记关系（wikilink）        |
+| `quick`  | 默认                                                | 30 字摘要 + 三家族标签 + 推荐值 + 入 inbox                                          |
+| `deep`   | 显式 `--depth=deep` 或自然语言（"深读"、"展开"）   | quick 的全部 + 5-10 条要点 + ≥ 1 条反方 / 反例 + 与既有笔记关系（wikilink） + 原文双语摘录 |
 
-deep 不是 quick 的"升级版"——是另一种使用语境（一篇值得花时间反复看的内容）。**默认走 quick**；deep 是显式动作。
+**单文件演进**：deep 是 quick 的就地升级，**不再另起 `-deep` 后缀文件**。同 slug 已存在 → 读取 → 把 `info_depth: quick` 改成 `deep`、追加 deep 三段、复评推荐值，同一份 `<vault>/info/inbox/<YYYY-MM>/<slug>.md` 持续生长。
 
-### frontmatter schema（v1）
+deep 不是 quick 的"升级版"也不是"另开一份"——它是同一条信息在「值得花时间反复看」语境下对同一文件的进一步充实。**默认走 quick**；deep 是显式动作。
+
+### frontmatter schema（v1，`info_` 前缀）
+
+按 [frontmatter-convention.md](../task/docs/frontmatter-convention.md) 规则：业务字段一律加系统前缀 `info_`；`tags` / `aliases` 是 Obsidian 原生字段，不加前缀。
 
 ```yaml
 ---
-状态: inbox                  # inbox / 深读队列 / 已读 / 归档 / 丢弃（人工改）
-上次状态变更日期: YYYY-MM-DD
+aliases:
+  - 摘录-<原文标题精简版>     # 必填一条；前缀「摘录-」固定
 tags:
   - <Topic>                  # 来自 _taxonomy.md
   - <Source>                 # 来自 _taxonomy.md
   - <Format>                 # 来自 _taxonomy.md
-depth: quick                 # quick / deep
-source_url: <url>            # 仅 URL 入口
-source_path: <path>          # 仅本地文件入口
-summary_quality: low         # 仅当 URL 抓取正文 < 200 字（付费墙 / JS 渲染 / 反爬）
+info_status: inbox            # inbox / 深读队列 / 已读 / 归档 / 丢弃（人工改）
+info_status_updated: YYYY-MM-DD
+info_depth: quick             # quick / deep
+info_recommendation: 3        # 0..5 整数，AI 评分；不确定给 3
+info_source_url: <url>        # 仅 URL 入口
+info_source_path: <path>      # 仅本地文件入口
+info_summary_quality: low     # 仅当 URL 抓取正文 < 200 字
 ---
 ```
 
-`intent` 字段 v2 路线图占位，v1 不写值。
+不写：
+
+- 中文字段名 `状态` / `上次状态变更日期`
+- 旧裸字段 `depth` / `source_url` / `source_path` / `summary_quality`
+- `intent` 字段（v2 路线图占位）
+
+容忍机制：读取老文件不报错，按"旧名 → 新名"映射；写新 / 升级时一律按新 schema。
+
+### 双语引用规则
+
+抓回正文 ASCII 比例 > 50% 视为非中文，所有 quote / 摘抄必须中英对照，**中文翻译 / 概括优先在前**：
+
+```markdown
+中文一句话传达大意。
+
+> 原文 quote 在这里。
+```
+
+中文原文则单语。deep 模式下「## 原文摘录」段必须按双语规则展开；quick 模式下若直接放了原文段也按此处理。
 
 ### 标签：从词表选，不自由生成
 
