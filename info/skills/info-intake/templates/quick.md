@@ -16,6 +16,8 @@ VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 
 ### 1. 读词表
 
+> **可并行**：本步与第 2 步开头的「抓取源 / 读源文件」可在同一消息内并行 tool call（详见 SKILL.md「并行执行指南」）。
+
 读 `<vault>/info/_taxonomy.md`，记下三家族（Topic / Source / Format）的全部 canonical tag。
 
 ### 2. 写 30 字摘要
@@ -71,6 +73,7 @@ info_status: inbox
 info_status_updated: <today, YYYY-MM-DD>
 info_depth: quick
 info_recommendation: <0..5>
+info_skip_count: 0
 info_source_url: <url>            # 仅 URL 入口
 info_source_path: <相对路径>      # 仅本地文件入口
 info_summary_quality: low         # 仅当抓回正文 < 200 字
@@ -81,6 +84,8 @@ info_summary_quality: low         # 仅当抓回正文 < 200 字
 
 - 空 tag 不要写空字符串占位，直接整行省略
 - `info_summary_quality` 字段非必有；只在 URL 抓取失败 / 正文 < 200 字时写
+- `info_skip_count` 必填整数，新建条目恒写 `0`；该字段由 `info-triage` 在 skip 时维护，intake 不动它（重摘录场景下保留旧值，不归零）
+- 不写 `info_triage_dropped_at` 字段（仅 `info-triage` 在 drop 时写）
 - 不写 `intent` 字段（v2 路线图占位）
 - 不写中文字段名 `状态` / `上次状态变更日期` / 旧裸字段 `depth` 等
 
@@ -113,7 +118,7 @@ info_summary_quality: low         # 仅当抓回正文 < 200 字
 写入路径：`<vault>/info/inbox/<YYYY-MM>/<slug>.md`
 
 - 月目录不存在则创建
-- 文件已存在（同 slug，主题相同）→ **就地更新**，刷新摘要 / 标签 / 推荐值 / 正文；不降级 `info_depth`（如果已是 deep，保持 deep）
+- 文件已存在（同 slug，主题相同）→ **就地更新**，刷新摘要 / 标签 / 推荐值 / 正文；不降级 `info_depth`（如果已是 deep，保持 deep）；**保留 `info_skip_count` 旧值**（不归零）；**保留 `info_status` / `info_status_updated`**（不回退到 `inbox`，由人工 / triage 流转）
 - 文件已存在（同 slug，主题不同，rare）→ 在 `<slug>` 后追加 `-2`、`-3`，**不要**覆盖
 - **不**用 `-deep` 后缀（已废弃；deep 是同文件就地升级）
 

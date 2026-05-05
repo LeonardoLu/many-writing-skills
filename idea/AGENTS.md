@@ -18,7 +18,8 @@ many-writing-skills/idea/
 ├── docs/
 │   ├── tag-system.md        ← idea 系列 tag 命名空间与状态机规范
 │   ├── aliases.md           ← idea 系列 frontmatter aliases 字段约定
-│   └── links.md             ← idea 系列 wikilink 使用指引
+│   ├── links.md             ← idea 系列 wikilink 使用指引
+│   └── interaction.md       ← idea 系列向用户提问的统一约定（ABCD 选项格式、术语解释等）
 ├── skills/
 │   ├── idea-create/
 │   │   ├── SKILL.md         ← skill 指令
@@ -39,9 +40,11 @@ many-writing-skills/idea/
 │   ├── idea-plan/
 │   │   ├── SKILL.md
 │   │   └── templates/idea-plan.template.md
-│   └── idea-summary/
-│       ├── SKILL.md
-│       └── templates/idea-summary.template.md
+│   ├── idea-summary/
+│   │   ├── SKILL.md
+│   │   └── templates/idea-summary.template.md
+│   └── idea-resume/         ← 只读 skill；不写文件，因此没有 templates/
+│       └── SKILL.md
 └── scripts/
     ├── install.sh           ← 拷贝本组 skills 到 vault
     ├── check.sh             ← 校验各 SKILL.md frontmatter 合法
@@ -56,10 +59,11 @@ many-writing-skills/idea/
 | --- | --- |
 | 调整某个 skill 的指令、步骤、边界 | `skills/<skill>/SKILL.md` |
 | 调整某个 skill 的输出文档结构 | `skills/<skill>/templates/<skill>.template.md`（可能还要顺手调对应 SKILL.md 中的"输出模板"段） |
-| 改动 idea 系列 tag 命名空间 / 状态机 | `docs/tag-system.md` 必改；7 个 SKILL.md + 7 个 template 的 frontmatter 需同步更新 |
-| 改动 aliases 字段形式 / kind 表 | `docs/aliases.md` 必改；7 个 template 的 frontmatter 与 7 个 SKILL.md 的"frontmatter / aliases 行为"段需同步更新 |
+| 改动 idea 系列 tag 命名空间 / 状态机 | `docs/tag-system.md` 必改；所有**会写文件**的 SKILL.md（即除 `idea-resume` 外的 7 个）+ 它们的 7 个 template 的 frontmatter 需同步更新 |
+| 改动 aliases 字段形式 / kind 表 | `docs/aliases.md` 必改；7 个 template 的 frontmatter 与 7 个会写文件的 SKILL.md 的"frontmatter / aliases 行为"段需同步更新 |
 | 改动 wikilink 使用指引 | `docs/links.md` 必改；如指引涉及具体 skill 的链接重点，顺手更新对应 SKILL.md 的"链接行为"段 |
-| 加 / 删一个 skill | `skills/<skill>/`（含 SKILL.md + templates）+ `README.md` 速查表 + `docs/tag-system.md`（如果有新 tag）|
+| 改动向用户提问的方式（选项格式、关键词解释要求、回答形式等） | `docs/interaction.md` 必改；所有会向用户提问的 SKILL.md 的 `## 交互行为` 段需同步检查（一般只引用 docs/interaction.md，不本地复制规则） |
+| 加 / 删一个 skill | `skills/<skill>/`（含 SKILL.md + templates；只读 skill 可省略 templates）+ `README.md` 速查表 + `docs/tag-system.md`（如果有新 tag）|
 | 调整安装、校验流程 | `scripts/{install,check,prepare-vault}.sh` |
 | 改动整体介绍 | `README.md` |
 
@@ -73,12 +77,22 @@ many-writing-skills/idea/
 
 另外，所有 idea-* skill 在自身 SKILL.md 中**必须保留** "边界（强制）" 一节，并写明：
 
-- 只允许写 `ideas/<idea-name>/` 目录下的文件
-- 明确列出本 skill 在该目录内允许修改的具体文件 / 字段（哪些可写，哪些不动）
+- 只允许写 `ideas/<idea-name>/` 目录下的文件（**只读 skill 例外**：仍要保留"边界（强制）"段，但写法是"只读，绝不修改任何文件"）
+- 明确列出本 skill 在该目录内允许修改的具体文件 / 字段（哪些可写，哪些不动）；只读 skill 列出"读取来源 + 不动什么"
 
 去掉 / 弱化这条等于让 skill 越界，是禁止的。
 
-每个 SKILL.md 还**必须保留** `## frontmatter / tag 行为`、`## frontmatter / aliases 行为`、`## 链接行为` 三节；它们分别引用 `docs/tag-system.md`、`docs/aliases.md`、`docs/links.md`。三份 docs 是各自命名空间的唯一权威来源，SKILL.md 里写的是"本 skill 的具体动作"，不要在 SKILL.md 里重新定义命名空间或语法。
+**会写文件的 SKILL.md** 还**必须保留** `## frontmatter / tag 行为`、`## frontmatter / aliases 行为`、`## 链接行为` 三节；它们分别引用 `docs/tag-system.md`、`docs/aliases.md`、`docs/links.md`。三份 docs 是各自命名空间的唯一权威来源，SKILL.md 里写的是"本 skill 的具体动作"，不要在 SKILL.md 里重新定义命名空间或语法。
+
+**只读 skill** 可以省略上述三节（写文件的行为不适用），但建议保留 `## 链接行为` 段说明本 skill 在拼输出时如何处理已有 wikilink（保留 / 重写 / 忽略）。
+
+如果 SKILL.md **会向用户提问**（决策提问或挖掘反问），则**必须保留** `## 交互行为` 段，并：
+
+- 第一行写 `按 [docs/interaction.md](../../docs/interaction.md)：`
+- 之后只列**本 skill 特有**的交互差异（例如 clarify 跳过项进"本轮未拍板"、brainstorm 每个角度恰挂 1 条反问、resume 选项动态裁剪）
+- **绝不**在本地重新定义 ABCD 编号格式、"一次只问一个"、"提问前先解释关键术语" 等已经被 `docs/interaction.md` 覆盖的规则——重复定义会让规则在两处漂移
+
+> 只读 skill（典型如 `idea-resume`）通常没有 templates/ 目录——它不写文件，没有结构化输出模板。`scripts/install.sh` 按 `idea-*` 前缀整目录拷贝，`scripts/check.sh` 只校验 SKILL.md frontmatter，所以缺 templates/ 不会触发任何告警。
 
 ## 改动 template 时的硬约束
 
@@ -100,8 +114,8 @@ many-writing-skills/idea/
 `docs/tag-system.md` 是 idea 系列 tag 命名空间（`idea/...`）的**唯一权威来源**。任何对 tag 的增删、状态机调整都必须：
 
 1. 先在 `docs/tag-system.md` 落定义 + 状态机表
-2. 同步更新 7 个 template 的 frontmatter
-3. 同步更新 7 个 SKILL.md 的 "frontmatter / tag 行为" 段
+2. 同步更新 7 个会写文件的 template 的 frontmatter
+3. 同步更新 7 个会写文件的 SKILL.md 的 "frontmatter / tag 行为" 段（只读 skill 如 idea-resume 不参与）
 4. 同步更新 `README.md` 中和 tag 有关的描述（如有）
 
 skill 在运行时**不允许**写任何不在 `tag-system.md` 中定义的 `idea/...` 命名空间 tag——这条约束写在 SKILL.md 里，靠规范保证，不靠脚本校验。

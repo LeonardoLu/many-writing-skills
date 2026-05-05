@@ -16,6 +16,8 @@ VERY IMPORTANT: Return only tags from `info/_taxonomy.md`, nothing else.
 
 ### 1. 读词表与 vault 上下文
 
+> **可并行**：本步可在同一消息内并行 ① 读 `_taxonomy.md` ② 检查同 slug 文件是否存在 ③ 扫近 6 月 inbox + `knowledge/` 找关联。vault 大（> 200 条）时第 ③ 项 spawn explore 子代理（详见 SKILL.md「并行执行指南」）。
+
 - 读 `<vault>/info/_taxonomy.md`，记三家族 canonical tag
 - **检查同 slug 文件是否已存在**：`<vault>/info/inbox/<YYYY-MM>/<slug>.md`
   - 不存在 → 走"新建分支"
@@ -98,15 +100,18 @@ info_status: inbox
 info_status_updated: <today, YYYY-MM-DD>
 info_depth: deep
 info_recommendation: <0..5, 复评后>
+info_skip_count: 0
 info_source_url: <url>            # 仅 URL 入口
 info_source_path: <相对路径>      # 仅本地文件入口
 info_summary_quality: low         # 仅当抓回正文 < 200 字
 ---
 ```
 
-deep 产物**不**写 `intent`（v2 路线图占位）；不写中文字段名 / 旧裸字段。
+deep 产物**不**写 `intent`（v2 路线图占位）；**不**写 `info_triage_dropped_at`（由 `info-triage` 维护）；不写中文字段名 / 旧裸字段。
 
-升级分支下：保留 quick 阶段已有的 frontmatter，按上面规则**修改字段值**而不是整段重写。`info_status` 不动（仍然 `inbox`，由人工流转）。
+`info_skip_count`：新建分支写 `0`；升级分支**保留**已有值（不归零，因为 deep 升级不改变 triage 状态）。
+
+升级分支下：保留 quick 阶段已有的 frontmatter，按上面规则**修改字段值**而不是整段重写。`info_status` 不动（由人工 / triage 流转）；`info_status_updated` 不更新（deep 升级不改 status）。
 
 ### 9. 拼正文
 

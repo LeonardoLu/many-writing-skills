@@ -6,6 +6,7 @@
 #   info/
 #   info/inbox/
 #   info/inbox/<current YYYY-MM>/
+#   info/research/                          <- info-research workspace root
 #   info/_taxonomy.md       <- copied from info/vault-template/_taxonomy.md
 #   info/dashboard.md       <- copied from info/vault-template/dashboard.md
 #   info/README.md          <- copied from info/vault-template/README.md
@@ -42,6 +43,7 @@ DIRS=(
   "info"
   "info/inbox"
   "info/inbox/$CURRENT_MONTH"
+  "info/research"
 )
 
 # Pairs: "<vault-relative-target>|<template-source-basename>"
