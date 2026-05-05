@@ -57,8 +57,6 @@ spawn 判定：建议 spawn outline.md
 aliases:
   - outline-<research-name>
 spawned_at: YYYY-MM-DD              # 本次 spawn 日期
-spawned_from_sources_count: <N>     # spawn 时 sources.md 的 H2 区块数
-spawned_from_notes_count: <P>       # spawn 时 notes.md 的散点条数
 intended_format: <长文 / 综述 / 短帖 / PPT / 待定>     # 由 LLM 推断 + 用户可改
 ---
 ```
@@ -71,7 +69,7 @@ intended_format: <长文 / 综述 / 短帖 / PPT / 待定>     # 由 LLM 推断 
 # outline · <research-name>
 
 > 论证骨架。章节级 H2 + 一句话提纲。
-> spawn 自 sources <N> 条 + notes <P> 条；目标形态：<intended_format>。
+> 目标形态：<intended_format>。
 
 ## 1. <章节 1 标题>
 
@@ -140,7 +138,7 @@ spawn 完成后：
 - 不建议"spawn 新文件"，建议"update 已有 outline"
 - 用户回 `update` → 按 3.3 update 模式重新生成章节
 - update 模式下 frontmatter 的 `spawned_at` 不动；其它字段更新为最新值
-- 在文件末尾追加一行历史日志：`> updated at YYYY-MM-DD（sources <N> / notes <P>）`
+- 在文件末尾追加一行历史日志：`> updated at YYYY-MM-DD`
 
 ## 5. 失败防御
 

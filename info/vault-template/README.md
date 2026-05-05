@@ -115,7 +115,6 @@ tags:
 info_research_status: active            # active / synthesized / archived（人工改）
 info_research_synthesis_at:             # synthesis.md spawn 时刻
 info_research_outline_at:               # outline.md spawn 时刻
-info_research_sources_count: 0          # H2 区块数量
 ```
 
 注：
