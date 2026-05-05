@@ -258,7 +258,7 @@ many-writing-skills/idea/
 │   ├── tag-system.md   ← idea 系列 tag 命名空间与状态机规范
 │   ├── aliases.md      ← idea 系列 frontmatter aliases 字段约定
 │   └── links.md        ← idea 系列 wikilink 使用指引
-├── skills/         ← 6 个 SKILL.md + 各自 templates
+├── skills/         ← 7 个 SKILL.md + 各自 templates
 └── scripts/        ← 安装、校验、vault 准备脚本
 ```
 
