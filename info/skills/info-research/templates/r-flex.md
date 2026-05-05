@@ -9,7 +9,7 @@ R-flex 总览图：
   → 第 1 节：workspace 识别与 slug 派生
   → 第 2 节：4 形态判定（隐性，不暴露 --intent）
   → 第 3 节：长内容自判 + sub-query 抽取（≤ N=5）
-    → 第 4 节：sub-query 顺序挑选 + K 间并行 + 跑全部逃生口
+    → 第 4 节：sub-query 顺序挑选 + K 间并行（subagent 优先；fallback multitask）+ 跑全部逃生口
   → 第 5 节：confidence 双重兜底（forced CoT + AFCE）
     → 低于阈值 0.7 → 主动追问 1 轮（一次性，不多轮）
     → 否则 → 透明告知"我推断意图是 X / search query 是 Y"后继续
@@ -161,23 +161,76 @@ LLM 在内部评估输入是否"内容较多"：
 （如希望跳过挑选直接全跑可说 `跑全部`）
 ```
 
-### 4.3 K 间并行执行
+### 4.3 K 间并行执行（subagent 优先）
 
-用户挑出 K 个 sub-query 后：
+用户挑出 K 个 sub-query 后，按"subagent > multitask > 串行"优先级选执行模式（参见 `info-research/SKILL.md` "并行执行指南"段）：
 
-- K 个 sub-query 之间走**并行**执行（避免顺序框架的 context saturation + error propagation；对应 [research#第 1 轮] InfoSeeker 反例）
+- **能力支持 subagent → 走 4.3.1 subagent 模式（默认）**
+- **能力不支持 subagent，仅支持多 tool call → 走 4.3.2 multitask fallback**
+- 两者都不支持 → 顺序串行（每 sub-query 一段消息，慢但可用）
+
+无论哪种模式：
+
+- K 个 sub-query 之间**并行**（避免顺序框架的 context saturation + error propagation；对应 [research#第 1 轮] InfoSeeker 反例）
 - 每个 sub-query 内部仍走第 6 节的标准管道（R-α 检索 + R-β 搜索）
 - K 个并行结果汇总后统一进入第 7 节写入 sources.md
+- H2 区块按 sub-query 序号排序，不按返回顺序
 
-并行执行的实现细节（在 Cursor agent 语境下）：
+#### 4.3.1 subagent 模式（默认）
 
-**具体实现**：
+**为什么默认 subagent**：单个 sub-query 内含 inbox 大规模扫描 + 多个 fresh URL 抓取 + 全文落附件，raw 内容动辄几万 token；如果直接在主 agent 跑，K 个 sub-query 的 raw 全部回流主 context，会快速耗尽预算。subagent 是独立 context，跑完只回 structured summary（≤ 几百 token / sub-query），主 agent 干净。
 
-- 在同一 assistant message 内对 K 个 sub-query 并发起 K 个 search / fetch tool call
-- 不要顺序等第一个返回再发第二个（这等价于退化到顺序框架）
+**实现**：
+
+- 主 agent 在同一消息内 spawn K 个 subagent（Cursor 里 = K 个 `Task` tool call，`subagent_type=generalPurpose`），每个 subagent 负责 1 个 sub-query
+- 每个 subagent 的 prompt 必须明确：
+  1. sub-query 原文
+  2. workspace 路径 `<vault>/info/research/<research-name>/`
+  3. 必须按本节 4.3.3 的返回 schema 输出
+  4. 写入边界：**只允许**在 `attachments/` 下创建新文件（不同文件名无 race）；**不允许**写 `sources.md` / 动 frontmatter
+  5. 内部并行许可：subagent 内部可 multitask R-α inbox 检索 + R-β fresh 搜索 + 多 URL 抓取
+- 主 agent 不要 await 第一个 subagent 再 spawn 第二个；K 个一起 spawn
+- 全部 subagent 返回后再进第 7 节单点写入
+
+#### 4.3.2 multitask fallback（subagent 不可用时）
+
+当 agent 平台不支持 subagent 但支持同消息多 tool call 时：
+
+- 在同一 assistant message 内对 K 个 sub-query 并发起搜索 / 抓取 tool call
 - 各 sub-query 的 R-α inbox 检索 + R-β fresh 搜索 也可在同一并发批次内（每 sub-query 2 个 tool call，K sub-query 共 2K 个 tool call 一起发）
-- 全部并发返回后再统一进入第 7 节写入（避免写文件 race）
-- 不要求严格同步；H2 区块按 sub-query 序号排序，不按返回顺序
+- 不要顺序等第一个返回再发第二个（等价于退化到顺序框架）
+- raw 内容会全部回流主 context，是有意识接受的代价；如出现明显 context 紧张，主 agent 可在抓回后用一个总结 prompt 把 raw 收敛后再继续（不强制）
+- 全部并发返回后统一进入第 7 节写入
+
+#### 4.3.3 subagent 返回 schema（4.3.1 模式下的合同）
+
+每个 subagent 必须按以下 YAML 结构回传给主 agent。主 agent 不接受其它格式（拿到非结构化 raw 就视为该 sub-query 失败，重 spawn 1 次）：
+
+```yaml
+sub_query: <原文>
+inbox_hits:
+  - path: info/inbox/<YYYY-MM>/<slug>
+    summary_zh: <≤120 字>
+fresh_results:
+  - attachment_path: info/research/<name>/attachments/<...>.md   # 已落则填，没落则空
+    source_url: <URL>
+    summary_zh: <≤120 字>
+    content_quality: ok | low                                     # < 200 字记 low
+sources_md_fragments:                                              # 主 agent 直接 append 的 H2 块草稿（已按 templates/sources.md 第 4 节去重指纹格式化）
+  - |
+    ## sub-query: <...>
+    ...
+notes:
+  fallback_alpha_zero: true | false
+  attachment_skipped_reason: <空 或 简述>
+```
+
+字段约定：
+
+- `sources_md_fragments` 是已经按 `templates/sources.md` 模板格式化好的字符串数组；主 agent 拿到后只做去重 + append，不再重排格式
+- `inbox_hits` / `fresh_results` 是给主 agent 做"是否触发额外提示"的辅助信息（如 fallback、抓取失败），并非二次格式化的源
+- `notes.fallback_alpha_zero=true` 时，主 agent 在第 8 节回报中追加 `[⚠ sub-query <X> 在 inbox 0 命中，已自动 fallback 到 fresh]`
+- `notes.attachment_skipped_reason` 非空时，主 agent 追加 `[⚠ sub-query <Y> fresh 抓取 < 200 字，未落附件：<原因>]`
 
 ---
 
@@ -265,6 +318,9 @@ confidence: <X.XX>
 ## 第 6 节：标准管道（R-α + R-β）
 
 > **R-α 与 R-β 可并行**：单 sub-query 内的 inbox 检索（6.1）与 fresh 搜索（6.2）可同时发起；R-α 0 命中 fallback（6.3）的判定推迟到两者都返回后再做。
+>
+> **subagent 模式下（4.3.1）**：6.1 / 6.2 在 subagent 内部并发，主 agent 不直接调；6.3 R-α 0 命中 fallback 由 subagent 在自己 context 内判定，结果通过 `notes.fallback_alpha_zero=true` 回传，主 agent 在第 8 节回报中据此输出 `[⚠ ...]` 行。
+> **multitask fallback 模式下（4.3.2）**：6.1 / 6.2 由主 agent 直接发 tool call，并发返回；6.3 由主 agent 自己判 fallback。
 
 每个 sub-query 走以下管道：
 
@@ -292,14 +348,17 @@ confidence: <X.XX>
 
 ## 第 7 节：写入 sources.md / attachments
 
-> **写入串行 + 多附件可并行**：sources.md 的 H2 区块追加与 frontmatter `info_research_sources_count` 更新必须在所有并发 sub-query 返回后单点完成；不要在每个 sub-query 返回时立刻写（会 race）。多个 attachment 落盘是不同文件，可在同一消息内并行写。
+> **subagent 写 attachments，主 agent 单点写 sources.md**：subagent 模式（4.3.1）下，attachments 在 subagent 内就地落盘（不同文件名，无 race）；sources.md 的 H2 区块追加一律由主 agent 在所有 subagent 返回后**单点**完成。
+>
+> **multitask fallback 模式（4.3.2）**：所有写入都在主 agent；多个 attachment 不同文件名可同消息并发写，sources.md 仍单点更新。
 
-并行执行返回后，按以下顺序统一写入：
+并行执行返回后，主 agent 按以下顺序统一写入：
 
-1. 每个 sub-query 的所有命中 → 按 `templates/sources.md` 第 4 节去重指纹判定
-2. 未命中已有指纹 → 追加 H2 区块；frontmatter `info_research_sources_count` 累加
+1. 收集各 subagent 回传的 `sources_md_fragments`（subagent 模式）/ 各 sub-query 命中（multitask fallback 模式）→ 按 `templates/sources.md` 第 4 节去重指纹判定
+2. 未命中已有指纹 → 追加 H2 区块
 3. 命中已有指纹 → 跳过追加，统计到"去重命中数"
-4. fresh 抓取且需要落附件 → 按 `templates/attachments.md` 写 `attachments/<YYYY-MM-DD>-<title-slug>-<hash6>.md`（命名规则与去重逻辑全在 attachments.md 第 1 / 2 / 3 / 6 节）
+4. fresh 抓取且需要落附件 → 按 `templates/attachments.md` 写 `attachments/<YYYY-MM-DD>-<title-slug>-<hash6>.md`（命名规则与去重逻辑全在 attachments.md 第 1 / 2 / 3 / 6 节）；subagent 模式下此步已在 subagent 内完成，主 agent 仅校对 `attachment_path` 是否真的存在
+5. 校验：如发现 subagent 越权写了 sources.md（违反 4.3.1 写入边界）→ 丢弃越权写入，按 `sources_md_fragments` 重做（见失败防御第 5 条）
 
 ---
 
@@ -325,7 +384,7 @@ research workspace: info/research/<research-name>/
 - **失败 1（confidence 双重兜底成本过高）**：v1 不强校验 token / RT；用户跑 4-8 周后填末尾"测量记录"段，超阈则按 plan B 回退到 Cursor 风格"固定问 3-5 个"
 - **失败 2（sub-query 抽爆）**：N=5 是硬上限；超过 5 → LLM 自行裁剪 + 告知用户"原本可拆 X 个，已裁到 5 个"
 - **失败 3（追问陷入死循环）**：追问最多 1 轮；第二轮仍低 → 强制继续，不再追问
-- **失败 4（K 间并行 race condition）**：sources.md 的 frontmatter `info_research_sources_count` 在并行写完后**统一更新一次**（不在每个 sub-query 写完时更新），避免计数漂移
+- **失败 4（subagent 越权写 sources.md）**：subagent 模式（4.3.1）下，subagent **不允许**写 `sources.md`，只能写 `attachments/` 下的新文件并通过 `sources_md_fragments` 回传草稿。如主 agent 在 subagent 返回后发现 sources.md 已被越权修改 → 丢弃越权写入（用 git checkout / 手动还原），按 `sources_md_fragments` 重做单点写入；同时在该次 subagent 的 prompt 模板里加一条警告（下次 spawn 时复用）
 
 ---
 
@@ -338,6 +397,7 @@ research workspace: info/research/<research-name>/
 - ❌ K 间并行时把 K 个 sub-query 的结果合并成一个 H2 区块（应当一 sub-query 一 H2）
 - ❌ R-α 0 命中时不告知用户就静默 fallback（必须在回报里标注）
 - ❌ fresh 抓取 < 200 字仍硬落 attachments（应当只在 sources.md 标"抓取失败"）
+- ❌ subagent 直接 append `sources.md`（违反 4.3.1 写入边界；只能通过 `sources_md_fragments` 回传给主 agent）
 
 ---
 

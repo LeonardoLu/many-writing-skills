@@ -84,7 +84,6 @@ SORT info_triage_dropped_at DESC
 TABLE WITHOUT ID
   file.link AS "research",
   info_research_status AS "状态",
-  info_research_sources_count AS "sources",
   info_research_synthesis_at AS "synthesis",
   info_research_outline_at AS "outline"
 FROM "info/research"

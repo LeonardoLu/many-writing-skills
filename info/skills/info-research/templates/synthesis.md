@@ -62,8 +62,6 @@ spawn 判定：建议 spawn synthesis.md
 aliases:
   - synthesis-<research-name>
 spawned_at: YYYY-MM-DD              # 本次 spawn 日期
-spawned_from_sources_count: <N>     # spawn 时 sources.md 的 H2 区块数（事后看进展）
-spawned_from_notes_count: <P>       # spawn 时 notes.md 的散点条数
 ---
 ```
 
@@ -75,7 +73,6 @@ spawned_from_notes_count: <P>       # spawn 时 notes.md 的散点条数
 # synthesis · <research-name>
 
 > 主结论 + 关键支撑 + 边界 / 反例。
-> spawn 自 notes.md 散点 <P> 条 + sources.md 来源 <N> 条。
 
 ## 主结论
 
@@ -130,7 +127,6 @@ spawn 完成后：
 - 在用户回报里告知：
   ```
   已 spawn synthesis.md：info/research/<research-name>/synthesis.md
-  spawn 时 sources <N> 条 / notes <P> 条
   ```
 
 ## 4. update 模式（synthesis.md 已存在）
@@ -139,8 +135,8 @@ spawn 完成后：
 
 - 不建议"spawn 新文件"，建议"update 已有 synthesis"
 - 用户回 `update` → 按 3.3 update 模式重新生成主结论 / 支撑 / 反例 / 未解四段
-- update 模式下 frontmatter 的 `spawned_at` 不动；`spawned_from_sources_count` / `spawned_from_notes_count` 更新为 update 时的最新数值
-- 在文件末尾追加一行历史日志：`> updated at YYYY-MM-DD（sources <N> / notes <P>）`
+- update 模式下 frontmatter 的 `spawned_at` 不动
+- 在文件末尾追加一行历史日志：`> updated at YYYY-MM-DD`
 
 ## 5. 失败防御
 

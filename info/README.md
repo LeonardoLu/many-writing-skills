@@ -192,7 +192,6 @@ tags:
 info_research_status: active            # active / synthesized / archived
 info_research_synthesis_at:             # YYYY-MM-DD
 info_research_outline_at:               # YYYY-MM-DD
-info_research_sources_count: 0
 ```
 
 字段写入分工：
