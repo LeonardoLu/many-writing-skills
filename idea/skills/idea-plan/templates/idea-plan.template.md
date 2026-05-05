@@ -9,11 +9,18 @@ aliases:
 
 # <Idea Title> 规划
 
-> 关联：[[ideas/<idea-name>/idea]]、[[ideas/<idea-name>/conclusion]]
+> 关联：[[ideas/<idea-name>/idea]]、[[ideas/<idea-name>/conclusion]]、[[ideas/<idea-name>/clarify]]
 > 规划于：YYYY-MM-DD
+> 版本：M（同步至 metadata.json.progress.plan_revision）
+> 基于：conclusion v<metadata.json.progress.conclusion_edition> + clarify 截止第 <metadata.json.progress.clarify_last_round> 轮 + research 截止第 <metadata.json.progress.research_last_round> 轮（如有）
 
 ## 目标
 - ...
+
+## 已采纳的 clarify 决定
+<!-- 由 idea-plan 从 clarify.md 各轮"决定"行萃取；空时整段省略 -->
+- [[ideas/<idea-name>/clarify#第 N 轮 · 待确认 i]]：<决定一句话>
+- [[ideas/<idea-name>/clarify#第 N 轮 · 待确认 j]]：<决定一句话>
 
 ## 非目标
 - ...

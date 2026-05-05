@@ -5,10 +5,10 @@ description: 把递入的链接、本地 markdown / PDF 或文本片段处理成
 
 # info-intake
 
-> 信息摄入与整理 skills 套件 v1 唯一组件。
-> 关联设计：`lujunhui-2nd-digital-garden/ideas/info-curation-skill-suite/`（idea / brainstorm / clarify / conclusion / research / plan）。
+> 信息摄入与整理 skills 套件组件之一。配套 `info-research`（主题研究 workspace）、`info-triage`（inbox 三齿轮 triage）。
+> 关联设计：`lujunhui-2nd-digital-garden/ideas/info-curation-skill-suite/` + `lujunhui-2nd-digital-garden/ideas/info-research-triage/`。
 > 关联约定：`many-writing-skills/task/docs/frontmatter-convention.md`（前缀注册表登记 `info_`）。
-> 状态：v1。triage / research / monitor 三组未做，遇到挑选 / 主题搜集 / 周期拉取的需求 → 提示用户人工处理。
+> 状态：v1。`monitor`（周期拉取）未做，遇到 RSS / newsletter 自动拉取的需求 → 提示用户人工处理。
 
 ## 适用场景
 
@@ -21,9 +21,9 @@ description: 把递入的链接、本地 markdown / PDF 或文本片段处理成
 
 **不**调用的场景（提示用户走对应路径）：
 
-- 想从已有 inbox 挑选今天该深读哪几条 → 提示「triage skill 还没做，请人工打开 `info/dashboard.md` 自己挑」
-- 想围绕一个主题搜集材料 → 提示「research skill 还没做，请人工搜或用 web 工具」
-- 想周期性拉取 RSS / newsletter / 社媒 → 提示「monitor skill 还没做」
+- 想从已有 inbox 挑选今天该深读哪几条 → 走 `info-triage`
+- 想围绕一个主题搜集材料 → 走 `info-research`
+- 想周期性拉取 RSS / newsletter / 社媒 → 提示「`info-monitor` 还没做」
 
 ## 输入
 
@@ -111,24 +111,29 @@ tags:
   - <Topic>                  # 来自 _taxonomy.md，可空
   - <Source>                 # 来自 _taxonomy.md，可空
   - <Format>                 # 来自 _taxonomy.md，必有
-info_status: inbox            # inbox / 深读队列 / 已读 / 归档 / 丢弃（人工改）
+info_status: inbox            # inbox / reading / archived / dropped（v1 主写 inbox，由 triage 流转）
 info_status_updated: YYYY-MM-DD
 info_depth: quick             # quick / deep
 info_recommendation: 3        # 0..5 整数，AI 评分（详见下方约定）
+info_skip_count: 0            # 整数，triage skip 累计；intake 新建写 0
 info_source_url: <url>        # URL 入口
 info_source_path: <相对路径>  # 本地文件入口
 info_summary_quality: low     # 仅当抓回正文 < 200 字
+info_triage_dropped_at:       # YYYY-MM-DD；仅 triage 在 drop 动作时写；intake 不写
 ---
 ```
 
 字段规则：
 
 - `aliases`：永远只放一条 `摘录-<原文标题精简版>`，不要堆多个；标题里有特殊字符（`/` `:` 等）时直接保留
-- `info_status`：v1 默认 `inbox`，AI 不主动改为其它值
+- `info_status`：intake 默认 `inbox`，由 `info-triage` 流转到 `reading` / `archived` / `dropped`；AI 不在 intake 层改为其它值
+- `info_status_updated`：**仅在 `info_status` 值变化时由 intake / triage 自动更新；triage skip 不更新**（这是三齿轮 stale-first 排序的语义基石）
 - `info_depth`：quick / deep 两值；deep 模式下就地升级时改为 deep
 - `info_recommendation`：必填整数 0~5；deep 时强制复评覆盖
+- `info_skip_count`：必填整数；intake 新建条目时写 `0`；`info-triage` 每次 skip 该条目时 `+= 1`；deep 升级 / 重摘录时不动该字段
 - `info_source_*` 二选一，按入口决定写哪个
 - `info_summary_quality`：只在 URL 抓取正文 < 200 字时写
+- `info_triage_dropped_at`：intake **不写**该字段（只登记 schema 占位）；由 `info-triage` 在 drop 动作时写入 `YYYY-MM-DD` 并同步置 `info_status: dropped`
 
 **推荐值评分约定（写文件时遵循）**：
 
@@ -140,6 +145,12 @@ info_summary_quality: low     # 仅当抓回正文 < 200 字
 - 5：极少给出（半年内 < 5 条），主张能改写自己已有思路
 
 **关于 `intent` 字段**：v1 不写值。schema 已在 v2 路线图里登记，目前 frontmatter 完全不出现这个 key。
+
+**triage 共享字段约定**（与 `info-triage` 一字不差）：
+
+- 三字段语义契约：`info_status` / `info_status_updated` / `info_skip_count`，全部由 intake 在新建条目时落齐
+- `info_status_updated` 写入规则只与 `info_status` 字段值变更耦合；其它字段（含 `info_skip_count` 自增、`info_recommendation` 复评、deep 升级）变更时**不**更新此字段
+- `info_triage_dropped_at` 与 `info_status: dropped` 共生：triage drop 时同写两者；intake 不主动写
 
 **v0.x.x 容忍机制**：
 
@@ -196,7 +207,40 @@ info_summary_quality: low     # 仅当抓回正文 < 200 字
 4. **失败 2（deep 滥用）监控**：deep 调用打日志 + 占比 > 20% 提醒
 5. **R-α 演化为 topic wiki**：参考 Karpathy LLM Wiki 模式，按 topic 维护增量更新
 6. **v2 输入形态扩展**：视频转录 + 图片 OCR + 社媒原生抓取（依赖 `many-work-writing-tools/` 基建）
-7. **triage / research / monitor 三组 skill 实装**
+7. **`info-monitor` skill 实装**（周期拉取 RSS / newsletter / 社媒）
+8. **`info-gc` skill**（孤儿 attachments 清理）：判据"无任何 sources.md 引用 + 父条目 `info_triage_dropped_at ≥ 30 天`"
+
+## 并行执行指南
+
+本 skill 跑某些步骤时可由 agent 并行加速；但有些步骤必须串行。下面是判定框架。
+
+### 用 multitask（同一消息内多 tool call）的场景
+
+- 多个独立 read / fetch / write 操作，之间无依赖
+- 操作之间不存在 race condition（不写同一文件）
+- 操作之间不涉及字段计数累加（计数要在并行返回后单点更新）
+
+### 用 subagent（spawn 独立子代理）的场景
+
+- 一次性要扫 > 20 个文件 / 跨多个目录的大规模探索
+- 多步推理，子任务可独立返回单个总结，避免污染父 context
+- 用户主体对话不需要看子任务中间过程
+
+在 Cursor 里：multitask = 同一 assistant message 里发多个 tool call；subagent = `Task` tool with `subagent_type=explore` / `generalPurpose`。在其它 AI agent 平台用同等机制。
+
+### 绝不并行的场景
+
+- 写同一文件（必串行）
+- 字段计数累加（如 sources_count / skip_count，要单点更新）
+- 用户交互链路（必保线性，不要在等用户回复时并行干别的）
+- 时序敏感的 prompt 链（如 R-flex 的 forced CoT → AFCE 必须串行）
+
+### 本 skill 的应用清单
+
+- multitask：deep 模式第 1 步可并行 ① 抓取 / 读源文件 ② 读 `info/_taxonomy.md` ③ 扫 `info/inbox/<最近 6 月>/*.md` 找同主题旧条目 ④ 扫 `knowledge/notes/` / `knowledge/sources/`（如存在）
+- multitask：quick 模式可并行 ① 抓取源 ② 读 `_taxonomy.md`
+- subagent：deep 模式找「与既有笔记关系」如果 vault 大（> 200 条 inbox + knowledge），spawn explore 子代理跑相关性扫描
+- 串行（不要并行）：第 4 步写入 + 第 5 步回报；同 slug 升级时读 → 改 → 写回必走顺序
 
 ## 相关文件
 

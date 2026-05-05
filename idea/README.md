@@ -24,12 +24,16 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 ├── conclusion.md   ← idea-conclusion  收敛后的稳定结论
 ├── research.md     ← idea-research    外部资料、论据、反例（追加）
 ├── plan.md         ← idea-plan        可执行规划：目标、里程碑、行动项
-└── summary.md      ← idea-summary     阶段快照（追加），方便下次继续
+├── summary.md      ← idea-summary     阶段快照（追加），方便下次继续
+└── metadata.json   ← 进度与运行时元信息（机器可读，详见 docs/metadata.md）
+（idea-resume 只读这个目录、不写任何文件）
 ```
+
+`metadata.json` 是 skill 维护的进度账本——记录"跑到第几轮、最新结论是哪一版、推荐下一步是哪个 skill、父子链表、冻结区清单"等跨产物状态。它不承担内容职责，所有正文仍然在 `.md` 文件里。详见 [docs/metadata.md](docs/metadata.md)。
 
 **所有 idea-\* skill 强制只能写自己 idea 的目录**，绝不会动 `ideas/<其他 idea>/`、`knowledge/`、`tasks/` 等任何别处。
 
-## 七个 skill 速查表
+## 八个 skill 速查表
 
 | Skill              | 触发用语示例                                     | 写到哪里               | 模式            |
 | ------------------ | ------------------------------------------------ | ---------------------- | --------------- |
@@ -40,6 +44,7 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 | `idea-research`    | "查查相关资料"、"找点论据"、"research 一下"      | `research.md`          | **追加**（多轮）|
 | `idea-plan`        | "做个执行计划"、"我想动手了"                     | `plan.md`              | 整体覆盖 / 追加 |
 | `idea-summary`     | "先存个档"、"做个阶段小结"、"下次继续"           | `summary.md`           | **追加**（多段）|
+| `idea-resume`      | "继续之前的 X idea"、"resume X"、"上次到哪了"    | —（不写文件）          | **只读**        |
 
 ## 怎么开始：最短路径
 
@@ -70,7 +75,7 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 如果你愿意把一个设想孵化彻底，建议按下面顺序走，每一步都对应一个明确的输出物：
 
 ```
-idea-create   →  idea.md           记下命题
+idea-create   →  idea.md + metadata.json   记下命题，建账本
    ↓
 idea-brainstorm × N 轮  →  brainstorm.md   多视角发散 + 反问挖思维
    ↓
@@ -85,7 +90,30 @@ idea-conclusion（再来一版）  →  conclusion.md   把调研结果纳入结
 idea-plan   →  plan.md          目标 + 里程碑 + 行动项
    ↓
 （任意时刻）idea-summary   →  summary.md   阶段快照
+   ↑↓
+（任意时刻）idea-resume   ←  读 metadata.json + summary.md 最新一段灌回当前对话（不写文件）
 ```
+
+每一步都会**同步**更新 `metadata.json` 中的对应进度字段（轮号 / 版本号 / 下一步推荐），所以任意时刻 metadata.json 都反映 workspace 的当前真实状态。
+
+### Fork：从一个 idea 拆出子设想
+
+当一个 idea 跑到一定程度，发现某个子主题需要独立孵化（不再回炉骨架决定）时，可以让 `idea-create` 走 **fork 模式**：
+
+```
+你 → 「从 X 拆出，专门讨论 Y 这部分」
+   ↓
+idea-create（fork 模式）
+   ↓
+ideas/<child>/
+├── idea.md          含 frontmatter parent_idea: <parent>
+└── metadata.json    fork.truth_source_policy = child-authoritative
+
+同时：
+ideas/<parent>/metadata.json 的 fork.child_workspaces 追加 <child>
+```
+
+子 idea 后续的 brainstorm 会自动切到"差分设计"模式（不再重新陈述命题，只展开"反例 + 落地"），冻结区清单避免对父 conclusion 的稳定结论再回炉。详见 [docs/frontmatter.md](docs/frontmatter.md) 与 [docs/metadata.md](docs/metadata.md)。
 
 每一步都不强制：
 
@@ -204,12 +232,28 @@ idea-plan   →  plan.md          目标 + 里程碑 + 行动项
 
 **和 conclusion 的区别**：conclusion 是"成果文档"（已稳定的判断），summary 是"工作日志"（当前进展 + 下次怎么接上）。同一个 idea 通常 1 份 conclusion 配多段 summary。
 
+### idea-resume — 切换上下文后接回来
+
+**输入**：idea 名 +（可选）"想从哪一步继续"。
+
+**做什么**：
+
+- 优先读 `summary.md` 最新一段，把"当前状态 / 已稳定要点 / 还在打开的问题 / 下次继续从哪开始 / 重要锚点"原样灌回当前对话
+- 没有 summary 时退化为按 `idea.md → conclusion.md → clarify.md → brainstorm.md → research.md → plan.md` 的顺序读各文件最新一节，自己临时拼一段"恢复卡片"
+- 末尾用 ABCD 选项问你"接下来要走哪个 skill？"——选项根据当前 workspace 的实际可用动作动态裁剪
+- **只读**：不写任何文件、不动 frontmatter、不动状态字段；下一个 skill 由你的下一条消息触发，本 skill 不替你调用
+
+**怎么触发**："继续之前的 X idea"、"resume X"、"接着 X 来"、"上次 X 到哪了"、"换了对话先把 X 的上下文捡回来"。
+
+**和 summary 的关系**：summary 写"下次怎么接"，resume 读"上次到哪"——两者是镜像。每次暂停前打一段 summary，下次回来 resume 就能直接走首选路径。
+
 ## 几条使用建议
 
 - **不要纠结于走完所有 skill**——大部分 idea 走到 brainstorm 几轮就够了，不必非要 plan 出来才"成立"
 - **brainstorm 的反问要回答**——如果你略过反问，下一轮的展开质量会下降
 - **conclusion 不是终点**——只要后续有新 brainstorm 或 research，可以再跑一次出新版
 - **summary 多打几次没成本**——尤其在切换上下文之前，留一份比靠记忆可靠
+- **切换上下文后用 idea-resume 接回来**——换对话 / 换设备时不要靠手工 cat 文件；说一句「resume X」让 AI 把最新 summary 灌回当前会话，没 summary 也会退化拼一份临时卡片
 - **每个 idea 一个目录，互不影响**——如果一个 idea 跑歪了，新开一个就好
 
 ## 模板与可定制
@@ -240,11 +284,30 @@ aliases:
   - multi-agent-brainstorm · brainstorm
 ```
 
-`<idea-name>` 与目录名一致，`<kind>` 取 `seed / brainstorm / conclusion / research / plan / summary` 之一（与文件类型 tag `idea/<kind>` 同段）。完整规则见 [docs/aliases.md](docs/aliases.md)。
+`<idea-name>` 与目录名一致，`<kind>` 取 `seed / brainstorm / clarify / conclusion / research / plan / summary` 之一（与文件类型 tag `idea/<kind>` 同段）。完整规则见 [docs/aliases.md](docs/aliases.md)。
+
+## metadata.json 与 frontmatter 扩展字段
+
+跨产物的运行时状态（轮号 / 版本号 / 下一步 / 父子链表 / 冻结区）统一存放在每个 workspace 的 `metadata.json`，不分散到各产物 frontmatter——这样 skill 之间不会因为漂移而看到"我以为 conclusion 是 v3，但 summary 还在引用 v2"这类内部矛盾。完整 schema、读写规则、退化行为见 [docs/metadata.md](docs/metadata.md)。
+
+子 idea 的 `idea.md` frontmatter 还会写入一个 `parent_idea: <parent-idea-name>` 字段，作为子 workspace 的结构性身份。详见 [docs/frontmatter.md](docs/frontmatter.md)。
 
 ## 文件之间的 wikilink
 
 idea workspace 内多个文件之间按需用 `[[ideas/<idea-name>/conclusion#已有结论]]` 这类 wikilink 互相指涉——主要用在"来源标注"、"下次继续从哪开始"、"重要锚点"等位置。何时该链、何时不该链的判断准则见 [docs/links.md](docs/links.md)。
+
+## 向用户提问的方式
+
+idea 系列里多个 skill 都会向用户提问——脑暴时抛反问、clarify 时给选项、conclusion / plan 在覆盖既有文件前征求确认、resume 在恢复后问"下一步走哪个 skill"。这些提问遵循统一约定：
+
+- 决策提问的选项编号固定为 **A / B / C / D**（最多 4 个）
+- **提问之前先解释关键术语**，让你和 AI 锚定在同一基准
+- 一次只问一个问题（决策提问）
+- 每个选项写「描述 + 与其他选项的关键差异 + 后果/取舍」
+- 必须有推荐 + 带具体出处的理由
+- 你可以接受推荐 / 选编号 / 自定义答案 / 跳过 / 取消
+
+完整规则与各 skill 的差异见 [docs/interaction.md](docs/interaction.md)。
 
 ## 安装
 
@@ -257,8 +320,11 @@ many-writing-skills/idea/
 ├── docs/
 │   ├── tag-system.md   ← idea 系列 tag 命名空间与状态机规范
 │   ├── aliases.md      ← idea 系列 frontmatter aliases 字段约定
-│   └── links.md        ← idea 系列 wikilink 使用指引
-├── skills/         ← 7 个 SKILL.md + 各自 templates
+│   ├── frontmatter.md  ← idea 系列 frontmatter 新增字段（parent_idea）约定
+│   ├── metadata.md     ← idea 系列 workspace metadata.json schema 与读写规则
+│   ├── links.md        ← idea 系列 wikilink 使用指引
+│   └── interaction.md  ← idea 系列向用户提问的统一约定（ABCD 选项格式等）
+├── skills/         ← 8 个 SKILL.md（含只读的 idea-resume）+ 各自 templates
 └── scripts/        ← 安装、校验、vault 准备脚本
 ```
 

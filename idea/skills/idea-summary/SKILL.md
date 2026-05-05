@@ -37,15 +37,25 @@ description: >-
 
 ## 步骤
 
-1. 清点工作区下所有相关文件：`idea.md` 必读；`brainstorm.md`、`conclusion.md`、`research.md`、`plan.md` 若存在都读取（同时记录每个文件的存在性、最新章节标题、最近修改时间感知）
-2. 按下面 4 个角度梳理：
-   - **当前状态**：每个文件一行，描述它现在长什么样（是否存在、最新一节是什么、跑了几轮）
+1. 清点工作区下所有相关文件：`idea.md` 必读（含 frontmatter `parent_idea`）；`brainstorm.md`、`clarify.md`、`conclusion.md`、`research.md`、`plan.md` 若存在都读取；若存在则读 `metadata.json`（取 `progress.*` 全部、`pointer.*`、`fork.*`、`guardrails.frozen_sections`）。`metadata.json` 不存在按 [docs/metadata.md](../../docs/metadata.md) 退化策略：自动补建初始骨架，从当前 workspace 文件感知 progress 字段
+2. **本段序号**：N = `metadata.json.progress.summary_last_segment` + 1（无则 1）
+3. 按下面 4 个角度梳理：
+   - **当前状态**：每个文件一行——状态字段**只**从单一来源拉，**不允许**人工启发式判断：
+     - idea 状态：`idea.md` frontmatter 的 `idea/status/<state>` tag
+     - brainstorm 轮号：`metadata.json.progress.brainstorm_last_round`
+     - clarify 轮号：`metadata.json.progress.clarify_last_round`
+     - conclusion 版本：`metadata.json.progress.conclusion_edition`
+     - research 轮号：`metadata.json.progress.research_last_round`
+     - plan 版本：`metadata.json.progress.plan_revision`
+     - summary 段号：本段 N
    - **已稳定的要点**：从 `idea.md` / `conclusion.md` / `brainstorm.md` 中萃取已经被多轮验证的关键判断（如果还没有，写"暂未沉淀稳定要点"）
-   - **还在打开的问题**：从 `conclusion.md` 的"仍然开放的问题"和 `brainstorm.md` 各轮的"下一轮焦点"里收集，去重后列出
-   - **下次继续从哪开始**：1-3 条具体动作（带文件名 / 段落锚点），动词起头，例如"打开 brainstorm.md 第 3 轮的反问 X 继续答"
-3. 在末尾给一组"重要锚点"链接：上次脑暴的具体一轮、最新结论的具体一节，方便下次跳转
-4. 把整段快照**追加**到 `ideas/<idea-name>/summary.md`，使用本 skill `templates/idea-summary.template.md` 中的结构
-5. 输出 summary 文件路径，并提示"下次想继续可以先打开这个文件 → 读最新一段"
+   - **还在打开的问题**：从 `conclusion.md` 的"仍然开放的问题"和 `brainstorm.md` 各轮的"下一轮焦点"、`metadata.json.pointer.blocked_on` 里收集，去重后列出
+   - **下次继续从哪开始**：1-3 条具体动作（带文件名 / 段落锚点），动词起头，例如"打开 brainstorm.md 第 3 轮的反问 X 继续答"；优先从 `metadata.json.pointer.next_skill` + `pointer.blocked_on` 拉
+4. **子 workspace 段**（仅当 `metadata.json.fork.child_workspaces` 非空时启用）：新增 H3 `### 子 workspace`，每个子一行 `- [[ideas/<child>/idea]] · 真相源策略：<metadata.json.fork.truth_source_policy>`
+5. 在末尾给一组"重要锚点"链接：上次脑暴的具体一轮、最新结论的具体一节，方便下次跳转
+6. 把整段快照**追加**到 `ideas/<idea-name>/summary.md`，使用本 skill `templates/idea-summary.template.md` 中的结构
+7. **更新 metadata.json**（read-modify-write 整文件）：`progress.summary_last_segment = N`、`pointer.next_skill`（从本段"下次继续"的第一条动作映射；如不明确则保留旧值）、`updated = <now>`
+8. 输出 summary 文件路径，并提示"下次想继续可以先打开这个文件 → 读最新一段；或者直接跑 idea-resume 让它把卡片灌回会话"
 
 ## 输出模板
 
@@ -72,6 +82,23 @@ description: >-
 - 不修改 `idea.md` 等其它文件的 aliases
 - alias 不基于 idea.md 的 H1，无需读取 H1
 
+## frontmatter / parent_idea 行为
+
+按 [docs/frontmatter.md](../../docs/frontmatter.md)：
+
+- 本 skill 仅**读取** `idea.md` frontmatter 的 `parent_idea`（决定是否在快照头部加"父 idea"行）
+- 本 skill **不写**任何 frontmatter 的 `parent_idea` 字段
+
+## metadata.json 行为
+
+按 [docs/metadata.md](../../docs/metadata.md)：
+
+- **读**：`progress.*` 全部（"当前状态"段渲染数据源）、`pointer.next_skill` / `pointer.blocked_on`（"下次继续"段的优先来源）、`fork.child_workspaces` / `fork.truth_source_policy`（"子 workspace"段渲染数据源）、`guardrails.frozen_sections`（不直接渲染，但避免"还在打开的问题"段重复列出冻结主题）
+- **写**：`progress.summary_last_segment = N`、`pointer.next_skill`（从本段"下次继续"映射）、`updated`
+- read-modify-write 整文件覆盖；保留所有未涉及的字段
+- metadata.json 不存在时按退化策略自动补建初始骨架，从当前 workspace 文件感知 progress 字段后再写
+- 本 skill 是各产物状态字段的**唯一渲染者**——所有数字都从 metadata.json 取，不允许在 summary 正文里硬写"clarify 第 6 轮"这种自然语言（避免与 metadata.json 漂移）
+
 ## 链接行为
 
 按 [docs/links.md](../../docs/links.md)，summary 是**链接密度最高**的文件，下列两节强烈建议每条都带锚点：
@@ -90,5 +117,6 @@ description: >-
 - **只允许修改 `ideas/<idea-name>/` 目录下的文件**，绝对不可以修改这个目录之外的任何文件
 - 在 `ideas/<idea-name>/` 内部允许的写操作：
   - 追加 / 创建 `summary.md`
-- 不修改 `idea.md`、`brainstorm.md`、`conclusion.md`、`research.md`、`plan.md`
+  - 读 / 写本 workspace 的 `metadata.json`（按 [docs/metadata.md](../../docs/metadata.md) read-modify-write 整文件）
+- 不修改 `idea.md`、`brainstorm.md`、`clarify.md`、`conclusion.md`、`research.md`、`plan.md`
 - 不在 summary 里替用户做收敛判断；那是 `idea-conclusion` 的工作
