@@ -49,7 +49,7 @@ skill 在 runtime 写入文件时：
 - `<idea-name>` 替换为本 idea 的实际目录名（与文件中其它位置的 `<idea-name>` 占位一致）
 - `<kind>` 不需要替换：每个 template 自己写死成对应的 kind 值即可（idea-create 模板写 `seed`、brainstorm 模板写 `brainstorm`，依此类推）
 
-> 实际上 6 个 template 里的 aliases 行可以直接写成 `- <idea-name> · brainstorm` 这种"半占位"形态——`<kind>` 已写死，只剩 `<idea-name>` 一处需要 skill 替换。
+> 实际上 7 个 template 里的 aliases 行可以直接写成 `- <idea-name> · brainstorm` 这种"半占位"形态——`<kind>` 已写死，只剩 `<idea-name>` 一处需要 skill 替换。
 
 ## skill 写 aliases 的行为
 

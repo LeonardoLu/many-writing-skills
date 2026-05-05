@@ -100,8 +100,8 @@ many-writing-skills/idea/
 `docs/tag-system.md` 是 idea 系列 tag 命名空间（`idea/...`）的**唯一权威来源**。任何对 tag 的增删、状态机调整都必须：
 
 1. 先在 `docs/tag-system.md` 落定义 + 状态机表
-2. 同步更新 6 个 template 的 frontmatter
-3. 同步更新 6 个 SKILL.md 的 "frontmatter / tag 行为" 段
+2. 同步更新 7 个 template 的 frontmatter
+3. 同步更新 7 个 SKILL.md 的 "frontmatter / tag 行为" 段
 4. 同步更新 `README.md` 中和 tag 有关的描述（如有）
 
 skill 在运行时**不允许**写任何不在 `tag-system.md` 中定义的 `idea/...` 命名空间 tag——这条约束写在 SKILL.md 里，靠规范保证，不靠脚本校验。
