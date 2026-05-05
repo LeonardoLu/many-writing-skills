@@ -17,7 +17,7 @@ TABLE WITHOUT ID
   info_status AS "状态",
   info_depth AS "档位",
   info_recommendation AS "推荐",
-  filter(file.tags, (t) => contains(t, "topic/") OR (! contains(t, "source/") AND ! contains(t, "format/"))) AS "Topic",
+  file.tags AS "标签",
   info_summary_quality AS "质量",
   info_status_updated AS "上次变更"
 FROM "info/inbox"
@@ -31,7 +31,7 @@ SORT info_recommendation DESC, info_status_updated DESC
 > 2. 已开启 "Enable JavaScript Queries" 不需要；本 query 是纯 DQL
 > 3. 路径 `info/inbox/<YYYY-MM>/` 已被 `prepare-vault.sh` 创建
 
-> 兼容性：旧文件（用 `状态` / `depth` / `summary_quality` 等字段）在本表里对应列会显示空。如要兼看老文件，可临时把 `info_status` 改成 `coalesce(info_status, 状态)` 之类。新写产物一律按 `info_*` 字段。
+> 兼容性：旧文件（用 `状态` / `depth` / `summary_quality` 等字段）在本表里对应列会显示空。新写产物一律按 `info_*` 字段。
 
 ## v2 视图占位
 
