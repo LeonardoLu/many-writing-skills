@@ -12,6 +12,7 @@ aliases:
 > 关联：[[ideas/<idea-name>/idea]]
 
 ## 第 N 轮 — YYYY-MM-DD
+> 上一轮：第 <N-1> 轮 · 本轮：第 <N> 轮（N 由 idea-clarify 在写入瞬间从 metadata.json.progress.clarify_last_round 读出后填入；N=1 时上一轮写"无"）
 > 焦点：<本轮关注哪些点 / 关注范围>
 
 ### 本轮待确认清单

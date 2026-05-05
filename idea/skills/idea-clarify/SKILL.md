@@ -33,27 +33,30 @@ description: >-
 
 ## 步骤
 
-1. 读取工作区下所有现有内容：`idea.md` 必读，`brainstorm.md` / `conclusion.md` / `research.md` / `plan.md` 若存在则一并读取，作为本轮提取待确认点的素材
-2. 从这些素材里归纳出本轮 **3–7 个待确认点**，优先级从高到低：
+1. 读取工作区下所有现有内容：`idea.md` 必读；`brainstorm.md` / `conclusion.md` / `research.md` / `plan.md` / `summary.md` 若存在则一并读取，作为本轮提取待确认点的素材；若存在则读 `metadata.json`（取 `progress.clarify_last_round`、`guardrails.frozen_sections`、`fork.truth_source_policy`）。`metadata.json` 不存在按 [docs/metadata.md](../../docs/metadata.md) 退化策略：自动补建初始骨架，从当前 workspace 文件感知 progress 字段
+2. **本轮序号**：N = max(clarify.md 已存在的最大轮号, `metadata.json.progress.clarify_last_round`) + 1；这是 clarify 轮号的**单一真相源**——其它 skill 都从 `metadata.json.progress.clarify_last_round` 读，不允许在 plan / conclusion / summary 正文里硬写"clarify 第 N 轮"自然语言（避免漂移）
+3. 从这些素材里归纳出本轮 **3–7 个待确认点**，优先级从高到低：
    - `brainstorm.md` 中各轮以 `?` 开头的反问行（最直接的"还没回答"信号）
    - `conclusion.md` 的"仍然开放的问题"
    - `idea.md` 的"相邻问题" / "可能的下一步"中尚无明确选择的项
    - 用户在输入里点名要确认的点
    - skill 自己识别出的、对后续 conclusion / plan 影响大的隐含决策（例如：受众 / 作用域 / 成功标准 / 优先级）
-3. 把待确认清单作为本轮开头先告诉用户（一句一项，编号），让用户对清单本身可以追加 / 删减 / 调整顺序；用户没异议或调整完毕后再开始逐项问
-4. **逐项进行**（按 [docs/interaction.md](../../docs/interaction.md) 的"一次只问一个问题" + "ABCD 选项"，下面是 clarify 在通用规则之上的具体动作）：
+4. **冻结区检查**：待确认清单中的项不得命中 `metadata.json.guardrails.frozen_sections` 列出的主题（按字符串匹配 + 语义判断）。若某项必须涉及，在该项 `术语：` 行之后加一行 `<!-- bypass-frozen: <理由一句> -->` 注释，说明为何打破冻结
+5. 把待确认清单作为本轮开头先告诉用户（一句一项，编号），让用户对清单本身可以追加 / 删减 / 调整顺序；用户没异议或调整完毕后再开始逐项问
+6. **逐项进行**（按 [docs/interaction.md](../../docs/interaction.md) 的"一次只问一个问题" + "ABCD 选项"，下面是 clarify 在通用规则之上的具体动作）：
    1. 提出问题（一句话，避免堆叠多个子问题）
    2. 紧接着写一行 `术语：<本问题中关键术语在此指 ...>`——锁定本题语境，避免基于不同理解作答
    3. 给 **A–D 之间 2–4 个选项**，每个选项按 `docs/interaction.md` 的"选项写法"列出描述、与其他选项的关键差异、后果 / 取舍
    4. **明确推荐一个选项 + 理由**：理由要落到本 idea 的具体语境（援引 idea.md / brainstorm.md 中的某条），不要用空话（"更通用"、"更灵活"这类不算理由）
    5. 等用户答复（接受推荐 / 选编号 / 自定义 / 跳过 / 取消，详见 `docs/interaction.md`"用户回答的形式"）
    6. 记录用户最终的决定**和用户给出的理由**（如果用户没说理由，沿用推荐理由并标注 "（沿用推荐理由）"）；若用户回"跳过"，把本项原样转入末尾的"本轮未拍板"列表
-5. 全部走完，或用户中途说"先到这里"时，把这一整轮确认按下面"输出格式"一节的结构**追加**到 `ideas/<idea-name>/clarify.md`
-6. 状态升级（仅当 `idea.md` 当前状态是 `seed` 时）：把 `idea.md` frontmatter 里的 `idea/status/seed` 替换为 `idea/status/lab`，同时正文中的 `> 状态：seed` 块引用行同步改为 `> 状态：lab`；其他状态值不动
-7. 输出 clarify 文件路径，并提示：
-   - "如果本轮决定显著改变了现有结论，可以再走一次 `idea-conclusion`"
-   - "如果决定够齐了，可以走 `idea-plan` 把它们落成可执行规划"
-   - 如果"本轮未拍板"非空，再补一句"未拍板的点可以下次 `idea-clarify` 再来一轮"
+7. 全部走完，或用户中途说"先到这里"时，把这一整轮确认按下面"输出格式"一节的结构**追加**到 `ideas/<idea-name>/clarify.md`；本轮表头**必须**写一行 `> 上一轮：第 <N-1> 轮 · 本轮：第 <N> 轮`（N=1 时上一轮写"无"）
+8. 状态升级（仅当 `idea.md` 当前状态是 `seed` 时）：把 `idea.md` frontmatter 里的 `idea/status/seed` 替换为 `idea/status/lab`，同时正文中的 `> 状态：seed` 块引用行同步改为 `> 状态：lab`；其他状态值不动
+9. **更新 metadata.json**（read-modify-write 整文件）：`progress.clarify_last_round = N`、`pointer.next_skill`（"本轮未拍板" 非空 → `idea-clarify`；空且本轮显著改变现有结论 → `idea-conclusion`；空且决定够齐 → `idea-plan`；其它默认保持）、`pointer.blocked_on`（"本轮未拍板" 非空时写"等用户回未拍板项"）、`updated = <now>`
+10. 输出 clarify 文件路径，并提示：
+    - "如果本轮决定显著改变了现有结论，可以再走一次 `idea-conclusion`"
+    - "如果决定够齐了，可以走 `idea-plan` 把它们落成可执行规划"
+    - 如果"本轮未拍板"非空，再补一句"未拍板的点可以下次 `idea-clarify` 再来一轮"
 
 ## 交互行为
 
@@ -94,6 +97,16 @@ clarify 在通用规则之上的**特有要求**：
 - 不修改 `idea.md` 等其它文件的 aliases
 - alias 不基于 idea.md 的 H1，无需读取 H1
 
+## metadata.json 行为
+
+按 [docs/metadata.md](../../docs/metadata.md)：
+
+- **读**：`progress.clarify_last_round`（决定本轮序号）、`guardrails.frozen_sections`（冻结区检查）、`fork.truth_source_policy`（父子模式参考）
+- **写**：`progress.clarify_last_round = N`、`pointer.next_skill`、`pointer.blocked_on`、`updated`
+- read-modify-write 整文件覆盖；保留所有未涉及的字段
+- metadata.json 不存在时按退化策略自动补建初始骨架，从当前 workspace 文件感知 progress 字段后再写
+- 由于本 skill 是 `clarify_last_round` 的**单一权威**，下游 skill（plan / conclusion / summary / resume）一律**只**从 metadata.json 读这个字段；本 skill 不再像旧版那样反写 plan / summary 文件中的占位
+
 ## 链接行为
 
 按 [docs/links.md](../../docs/links.md)，clarify 中的常见用法：
@@ -116,6 +129,7 @@ clarify 在通用规则之上的**特有要求**：
 - 在 `ideas/<idea-name>/` 内部允许的写操作：
   - 追加 / 创建 `clarify.md`
   - 仅修改 `idea.md` 中的状态字段（不改正文，不改其它字段）
+  - 读 / 写本 workspace 的 `metadata.json`（按 [docs/metadata.md](../../docs/metadata.md) read-modify-write 整文件）
 - 不动 `brainstorm.md`、`conclusion.md`、`research.md`、`plan.md`、`summary.md`——它们是别的 skill 的产物
 - 不替用户回答任何待确认项；用户跳过的项保留在"本轮未拍板"
 - 每轮独立，不跨轮合并；旧轮决定保留为历史，新决定走新一轮

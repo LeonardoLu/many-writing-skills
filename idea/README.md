@@ -24,9 +24,12 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 ├── conclusion.md   ← idea-conclusion  收敛后的稳定结论
 ├── research.md     ← idea-research    外部资料、论据、反例（追加）
 ├── plan.md         ← idea-plan        可执行规划：目标、里程碑、行动项
-└── summary.md      ← idea-summary     阶段快照（追加），方便下次继续
+├── summary.md      ← idea-summary     阶段快照（追加），方便下次继续
+└── metadata.json   ← 进度与运行时元信息（机器可读，详见 docs/metadata.md）
 （idea-resume 只读这个目录、不写任何文件）
 ```
+
+`metadata.json` 是 skill 维护的进度账本——记录"跑到第几轮、最新结论是哪一版、推荐下一步是哪个 skill、父子链表、冻结区清单"等跨产物状态。它不承担内容职责，所有正文仍然在 `.md` 文件里。详见 [docs/metadata.md](docs/metadata.md)。
 
 **所有 idea-\* skill 强制只能写自己 idea 的目录**，绝不会动 `ideas/<其他 idea>/`、`knowledge/`、`tasks/` 等任何别处。
 
@@ -72,7 +75,7 @@ ideas/topic-based-weekly-report/   ← 一个 idea 的工作区
 如果你愿意把一个设想孵化彻底，建议按下面顺序走，每一步都对应一个明确的输出物：
 
 ```
-idea-create   →  idea.md           记下命题
+idea-create   →  idea.md + metadata.json   记下命题，建账本
    ↓
 idea-brainstorm × N 轮  →  brainstorm.md   多视角发散 + 反问挖思维
    ↓
@@ -88,8 +91,29 @@ idea-plan   →  plan.md          目标 + 里程碑 + 行动项
    ↓
 （任意时刻）idea-summary   →  summary.md   阶段快照
    ↑↓
-（任意时刻）idea-resume   ←  读 summary.md 最新一段灌回当前对话（不写文件）
+（任意时刻）idea-resume   ←  读 metadata.json + summary.md 最新一段灌回当前对话（不写文件）
 ```
+
+每一步都会**同步**更新 `metadata.json` 中的对应进度字段（轮号 / 版本号 / 下一步推荐），所以任意时刻 metadata.json 都反映 workspace 的当前真实状态。
+
+### Fork：从一个 idea 拆出子设想
+
+当一个 idea 跑到一定程度，发现某个子主题需要独立孵化（不再回炉骨架决定）时，可以让 `idea-create` 走 **fork 模式**：
+
+```
+你 → 「从 X 拆出，专门讨论 Y 这部分」
+   ↓
+idea-create（fork 模式）
+   ↓
+ideas/<child>/
+├── idea.md          含 frontmatter parent_idea: <parent>
+└── metadata.json    fork.truth_source_policy = child-authoritative
+
+同时：
+ideas/<parent>/metadata.json 的 fork.child_workspaces 追加 <child>
+```
+
+子 idea 后续的 brainstorm 会自动切到"差分设计"模式（不再重新陈述命题，只展开"反例 + 落地"），冻结区清单避免对父 conclusion 的稳定结论再回炉。详见 [docs/frontmatter.md](docs/frontmatter.md) 与 [docs/metadata.md](docs/metadata.md)。
 
 每一步都不强制：
 
@@ -260,7 +284,13 @@ aliases:
   - multi-agent-brainstorm · brainstorm
 ```
 
-`<idea-name>` 与目录名一致，`<kind>` 取 `seed / brainstorm / conclusion / research / plan / summary` 之一（与文件类型 tag `idea/<kind>` 同段）。完整规则见 [docs/aliases.md](docs/aliases.md)。
+`<idea-name>` 与目录名一致，`<kind>` 取 `seed / brainstorm / clarify / conclusion / research / plan / summary` 之一（与文件类型 tag `idea/<kind>` 同段）。完整规则见 [docs/aliases.md](docs/aliases.md)。
+
+## metadata.json 与 frontmatter 扩展字段
+
+跨产物的运行时状态（轮号 / 版本号 / 下一步 / 父子链表 / 冻结区）统一存放在每个 workspace 的 `metadata.json`，不分散到各产物 frontmatter——这样 skill 之间不会因为漂移而看到"我以为 conclusion 是 v3，但 summary 还在引用 v2"这类内部矛盾。完整 schema、读写规则、退化行为见 [docs/metadata.md](docs/metadata.md)。
+
+子 idea 的 `idea.md` frontmatter 还会写入一个 `parent_idea: <parent-idea-name>` 字段，作为子 workspace 的结构性身份。详见 [docs/frontmatter.md](docs/frontmatter.md)。
 
 ## 文件之间的 wikilink
 
@@ -290,6 +320,8 @@ many-writing-skills/idea/
 ├── docs/
 │   ├── tag-system.md   ← idea 系列 tag 命名空间与状态机规范
 │   ├── aliases.md      ← idea 系列 frontmatter aliases 字段约定
+│   ├── frontmatter.md  ← idea 系列 frontmatter 新增字段（parent_idea）约定
+│   ├── metadata.md     ← idea 系列 workspace metadata.json schema 与读写规则
 │   ├── links.md        ← idea 系列 wikilink 使用指引
 │   └── interaction.md  ← idea 系列向用户提问的统一约定（ABCD 选项格式等）
 ├── skills/         ← 8 个 SKILL.md（含只读的 idea-resume）+ 各自 templates

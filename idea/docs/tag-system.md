@@ -16,6 +16,10 @@ tags:
 ---
 ```
 
+> 除 `tags` 与 `aliases` 之外，子 idea 的 `idea.md` frontmatter 还可携带一个 `parent_idea` 字段，详见 [frontmatter.md](frontmatter.md)。
+>
+> 跨产物的运行时状态（进度 / 下一步推荐 / 父子链表 / 冻结区等）**不**进 frontmatter，统一存放在每个 workspace 的 `metadata.json`，详见 [metadata.md](metadata.md)。
+
 ## tag 命名通用规则
 
 按 Obsidian 的 tag 规则约束（与本文同等强制）：

@@ -18,6 +18,8 @@ many-writing-skills/idea/
 ├── docs/
 │   ├── tag-system.md        ← idea 系列 tag 命名空间与状态机规范
 │   ├── aliases.md           ← idea 系列 frontmatter aliases 字段约定
+│   ├── frontmatter.md       ← idea 系列 frontmatter 新增字段（parent_idea）约定
+│   ├── metadata.md          ← idea 系列 workspace metadata.json schema 与读写规则
 │   ├── links.md             ← idea 系列 wikilink 使用指引
 │   └── interaction.md       ← idea 系列向用户提问的统一约定（ABCD 选项格式、术语解释等）
 ├── skills/
@@ -62,6 +64,8 @@ many-writing-skills/idea/
 | 改动 idea 系列 tag 命名空间 / 状态机 | `docs/tag-system.md` 必改；所有**会写文件**的 SKILL.md（即除 `idea-resume` 外的 7 个）+ 它们的 7 个 template 的 frontmatter 需同步更新 |
 | 改动 aliases 字段形式 / kind 表 | `docs/aliases.md` 必改；7 个 template 的 frontmatter 与 7 个会写文件的 SKILL.md 的"frontmatter / aliases 行为"段需同步更新 |
 | 改动 wikilink 使用指引 | `docs/links.md` 必改；如指引涉及具体 skill 的链接重点，顺手更新对应 SKILL.md 的"链接行为"段 |
+| 改动 frontmatter 新增字段（如 `parent_idea`）的形式 / 取值 / writer / reader | `docs/frontmatter.md` 必改；相关 SKILL.md 的 `## frontmatter / parent_idea 行为` 段需同步检查 |
+| 改动 `metadata.json` schema（增删字段、改语义、升 schema_version） | `docs/metadata.md` 必改；所有**会写文件**的 SKILL.md 的 `## metadata.json 行为` 段需同步检查 |
 | 改动向用户提问的方式（选项格式、关键词解释要求、回答形式等） | `docs/interaction.md` 必改；所有会向用户提问的 SKILL.md 的 `## 交互行为` 段需同步检查（一般只引用 docs/interaction.md，不本地复制规则） |
 | 加 / 删一个 skill | `skills/<skill>/`（含 SKILL.md + templates；只读 skill 可省略 templates）+ `README.md` 速查表 + `docs/tag-system.md`（如果有新 tag）|
 | 调整安装、校验流程 | `scripts/{install,check,prepare-vault}.sh` |
@@ -82,9 +86,16 @@ many-writing-skills/idea/
 
 去掉 / 弱化这条等于让 skill 越界，是禁止的。
 
-**会写文件的 SKILL.md** 还**必须保留** `## frontmatter / tag 行为`、`## frontmatter / aliases 行为`、`## 链接行为` 三节；它们分别引用 `docs/tag-system.md`、`docs/aliases.md`、`docs/links.md`。三份 docs 是各自命名空间的唯一权威来源，SKILL.md 里写的是"本 skill 的具体动作"，不要在 SKILL.md 里重新定义命名空间或语法。
+**会写文件的 SKILL.md** 还**必须保留** `## frontmatter / tag 行为`、`## frontmatter / aliases 行为`、`## metadata.json 行为`、`## 链接行为` 四节；它们分别引用 `docs/tag-system.md`、`docs/aliases.md`、`docs/metadata.md`、`docs/links.md`。这四份 docs 是各自命名空间的唯一权威来源，SKILL.md 里写的是"本 skill 的具体动作"，不要在 SKILL.md 里重新定义命名空间或语法。
 
-**只读 skill** 可以省略上述三节（写文件的行为不适用），但建议保留 `## 链接行为` 段说明本 skill 在拼输出时如何处理已有 wikilink（保留 / 重写 / 忽略）。
+会写文件的 SKILL.md 在 `## metadata.json 行为` 段里**必须**说明：
+
+- 本 skill 在哪一步读 `metadata.json` 的哪些字段
+- 本 skill 在哪一步写 `metadata.json` 的哪些字段（必须包括 `updated`，按 read-modify-write 整文件覆盖）
+- 本 skill 发现 metadata.json 缺失时的退化策略（自动创建初始骨架，从当前 workspace 文件感知 progress 字段）
+- 任何对 frontmatter 的扩展字段（当前仅 `parent_idea`）的读写应在 `## frontmatter / parent_idea 行为` 段单独说明
+
+**只读 skill**（典型如 `idea-resume`）可以省略 `## frontmatter / tag 行为`、`## frontmatter / aliases 行为`、`## metadata.json 行为` 三节中的"写"动作（它什么都不写），但**必须**保留 `## metadata.json 行为` 段说明它如何读 metadata.json 与处理缺失退化；建议保留 `## 链接行为` 段说明本 skill 在拼输出时如何处理已有 wikilink（保留 / 重写 / 忽略）。
 
 如果 SKILL.md **会向用户提问**（决策提问或挖掘反问），则**必须保留** `## 交互行为` 段，并：
 
@@ -109,6 +120,8 @@ many-writing-skills/idea/
 - 看 SKILL.md 的"输出模板"段是否需要更新（描述如果脱离了 template 实际结构就改）
 - 看是否会破坏已有的 `ideas/<idea-name>/` 文件——尽量做兼容改动，避免现有内容被新模板视作非法
 
+template frontmatter **不**写运行时字段——`pointer` / `progress` / `fork` / `guardrails` 全部归 `metadata.json`，由 [docs/metadata.md](docs/metadata.md) 管。template frontmatter 仅含 `tags`、`aliases`，外加 `idea-create.template.md` 的可选 `parent_idea` 注释行（仅 fork 模式由 idea-create 取消注释填值）。
+
 ## 改动 tag 体系时的硬约束
 
 `docs/tag-system.md` 是 idea 系列 tag 命名空间（`idea/...`）的**唯一权威来源**。任何对 tag 的增删、状态机调整都必须：
@@ -119,6 +132,18 @@ many-writing-skills/idea/
 4. 同步更新 `README.md` 中和 tag 有关的描述（如有）
 
 skill 在运行时**不允许**写任何不在 `tag-system.md` 中定义的 `idea/...` 命名空间 tag——这条约束写在 SKILL.md 里，靠规范保证，不靠脚本校验。
+
+## 改动 metadata.json schema 时的硬约束
+
+`docs/metadata.md` 是 `ideas/<idea-name>/metadata.json` schema 的**唯一权威来源**。任何 schema 增删字段、改语义、升 `schema_version` 都必须：
+
+1. 先在 `docs/metadata.md` 落定义 + 字段表 + 写入规则
+2. **升级必须 backward compatible**：旧 skill 读新 metadata.json 不报错（仅读自己认识的字段、保留未知字段）
+3. 同步更新所有会写文件的 SKILL.md 的 "metadata.json 行为" 段
+4. 同步更新 `README.md` 中和 metadata.json 有关的描述（如有）
+5. 老 metadata.json 由读到的 skill 兼容补齐，不要求迁移脚本
+
+skill 在运行时**不允许**写任何不在 `docs/metadata.md` 中定义的 schema 字段；不允许只 patch 个别字段（必须 read-modify-write 整文件覆盖）。这两条约束写在 SKILL.md 与 docs/metadata.md 里，靠规范保证。
 
 ## 加新 skill 的步骤
 

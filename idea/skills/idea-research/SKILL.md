@@ -30,22 +30,28 @@ description: >-
 
 ## 步骤
 
-1. 读取工作区下所有现有内容：`idea.md` 必读，`brainstorm.md` / `conclusion.md` 若存在则读取，作为本次调研的方向锚
-2. 从 `idea.md` 命题和 `conclusion.md`（若有）的"仍然开放的问题"中归纳出本轮调研问题列表（3-6 条），优先调研那些**对结论影响最大**的问题
-3. 使用工具上可用的检索方式（联网搜索、抓取页面、查询参考资料）拉取相关材料；每条材料**必须**记录：
+1. 读取工作区下所有现有内容：`idea.md` 必读；`brainstorm.md` / `clarify.md` / `conclusion.md` / `plan.md` 若存在则读取，作为本次调研的方向锚；若存在则读 `metadata.json`（取 `progress.research_last_round`、`progress.clarify_last_round`、`progress.conclusion_edition`）。`metadata.json` 不存在按 [docs/metadata.md](../../docs/metadata.md) 退化策略：自动补建初始骨架，从当前 workspace 文件感知 progress 字段
+2. **本轮序号**：N = max(research.md 已存在的最大轮号, `metadata.json.progress.research_last_round`) + 1
+3. 从 `idea.md` 命题和 `conclusion.md`（若有）的"仍然开放的问题"中归纳出本轮调研问题列表（3-6 条），优先调研那些**对结论影响最大**的问题
+4. 使用工具上可用的检索方式（联网搜索、抓取页面、查询参考资料）拉取相关材料；每条材料**必须**记录：
    - 标题或一句话摘要
    - 来源 URL 或出处
    - 与本 idea 的关联：是支撑、反对、还是补充类比
-4. 对材料做轻度二次加工：
+5. 对材料做轻度二次加工：
    - 同主题去重，不要把多个相似来源平铺
    - 区分"事实/数据"、"观点/主张"、"已有产品/做法"、"反例/失败案例"四类
    - 对每条材料给出 1-2 句"对本 idea 意味着什么"的短点评
-5. 在结尾给一份"对结论的影响"小结：本轮调研让哪些结论更稳了，哪些受到了挑战，哪些新方向出现了
-6. 把整轮调研**追加**到 `ideas/<idea-name>/research.md`，使用下方模板
-7. 状态升级（仅当 `idea.md` 当前状态是 `seed` 时）：把 `idea.md` 的状态 tag 与正文状态行同步升级为 `lab`；其他状态值不动
-8. 输出 research 文件路径，并提示：
-   - "如果调研显著改变了原结论，可以再走一次 `idea-conclusion`"
-   - 如果本次完成后累计已有 ≥ 2 轮调研，再补一句"建议跑 `idea-summary` 留一份阶段快照"
+6. **挑战已拍板检查**（解决"research 软推翻 clarify 没有合并闸门"）：分类材料时若发现某条材料**直接挑战 `clarify.md` 已拍板的某条决定**，**必须**填一份结构化记录（`### 对已拍板决定的挑战（如有）` 段，模板见 templates/idea-research.template.md），不允许只在备注里口头说。每条挑战项含三行：
+   - 被挑战的决定：`[[ideas/<idea-name>/clarify#第 N 轮 · 待确认 i]]`
+   - 挑战理由：一句话
+   - 建议下一步：`跑 idea-clarify 第 N+1 轮就此项重新拍板`（N+1 取自 `metadata.json.progress.clarify_last_round + 1`）
+7. 在结尾给一份"对结论的影响"小结：本轮调研让哪些结论更稳了，哪些受到了挑战，哪些新方向出现了；**若本轮含挑战项**，小结**必须**以一句"建议跑 idea-clarify 就以下挑战项重新拍板"作结尾
+8. 把整轮调研**追加**到 `ideas/<idea-name>/research.md`，使用下方模板
+9. 状态升级（仅当 `idea.md` 当前状态是 `seed` 时）：把 `idea.md` 的状态 tag 与正文状态行同步升级为 `lab`；其他状态值不动
+10. **更新 metadata.json**（read-modify-write 整文件）：`progress.research_last_round = N`、`pointer.next_skill`（含挑战项 → `idea-clarify`；否则 → `idea-conclusion`）、`pointer.blocked_on`（含挑战项时写"等用户跑 idea-clarify 拍板挑战项"）、`updated = <now>`
+11. 输出 research 文件路径，并提示：
+    - "如果调研显著改变了原结论，可以再走一次 `idea-conclusion`"
+    - 如果本次完成后累计已有 ≥ 2 轮调研，再补一句"建议跑 `idea-summary` 留一份阶段快照"
 
 ## 输出模板
 
@@ -72,6 +78,15 @@ description: >-
 - 不修改 `idea.md` 等其它文件的 aliases
 - alias 不基于 idea.md 的 H1，无需读取 H1
 
+## metadata.json 行为
+
+按 [docs/metadata.md](../../docs/metadata.md)：
+
+- **读**：`progress.research_last_round`（决定本轮序号）、`progress.clarify_last_round`（"建议跑 clarify 第 N+1 轮"中的 N 取自这里）、`progress.conclusion_edition`（"对结论的影响"小结引用最新结论版号）
+- **写**：`progress.research_last_round = N`、`pointer.next_skill`、`pointer.blocked_on`、`updated`
+- read-modify-write 整文件覆盖；保留所有未涉及的字段
+- metadata.json 不存在时按退化策略自动补建初始骨架，从当前 workspace 文件感知 progress 字段后再写
+
 ## 链接行为
 
 按 [docs/links.md](../../docs/links.md)，research 中的常见用法：
@@ -91,5 +106,8 @@ description: >-
 - **只允许修改 `ideas/<idea-name>/` 目录下的文件**，绝对不可以修改这个目录之外的任何文件
 - 在 `ideas/<idea-name>/` 内部允许的写操作：
   - 追加 / 创建 `research.md`
-- 不修改 `idea.md`、`brainstorm.md`、`conclusion.md`、`plan.md`
+  - 仅修改 `idea.md` 中的状态字段（不改正文）
+  - 读 / 写本 workspace 的 `metadata.json`（按 [docs/metadata.md](../../docs/metadata.md) read-modify-write 整文件）
+- 不修改 `idea.md` 正文、`brainstorm.md`、`clarify.md`、`conclusion.md`、`plan.md`、`summary.md`
 - 不直接修改 `conclusion.md`；调研结论只写在本 skill 的 `research.md` 里。如果用户希望用调研结果重出一版结论，提示再走一次 `idea-conclusion`
+- 不替用户拍板挑战项；挑战项以结构化形式记录到 research.md，由用户决定是否跑下一轮 clarify
