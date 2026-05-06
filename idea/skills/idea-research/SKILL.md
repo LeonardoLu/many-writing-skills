@@ -1,11 +1,11 @@
 ---
-
-## name: idea-research
+name: idea-research
 description: >-
   Gather external information, references, and supporting / opposing arguments
-  for an idea workspace, and persist findings to ideas//research.md.
+  for an idea workspace, and persist findings to ideas/<idea-name>/research.md.
   Use when the user says "查查相关资料", "看看别人怎么说", "找点论据",
   "research 一下这个 idea", or wants to bring outside evidence into the idea.
+---
 
 # idea-research
 
