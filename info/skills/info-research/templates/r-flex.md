@@ -2,6 +2,8 @@
 
 > 本模板规范 R-flex 从用户自由文本输入到 sub-query 执行的完整管道。**唯一目标**：把 4 种输入形态（词 / 句 / 方向 / 文章）归一化成可执行的 sub-query 列表，再按 inbox 检索（R-α）+ fresh 搜索（R-β）双通道执行；全程透明告知机制 + confidence 双重兜底。
 
+> 注：R-flex 是**摄料**管道。如用户显式发起 question 指令（"问一下：X" / `--question=X` 等，详见 [`question.md`](question.md)），跳过本管道，直接走 question 流程（基于现有 workspace 材料回答，不搜集新材料）。
+
 R-flex 总览图：
 
 ```text
@@ -373,9 +375,12 @@ research workspace: info/research/<research-name>/
 [⚠ confidence 低于阈值，已主动追问 1 轮]                        # 仅触发追问时
 [⚠ sub-query <X> 在 inbox 0 命中，已自动 fallback 到 fresh]      # 仅 fallback 时
 [⚠ sub-query <Y> fresh 抓取 < 200 字，未落附件]                  # 仅抓取失败时
-[💡 建议 spawn synthesis.md（理由：<spawn 判定结果>）]            # 仅 spawn 判定触发
 [💡 建议 spawn outline.md（理由：<spawn 判定结果>）]              # 仅 spawn 判定触发
+[💡 建议 spawn synthesis.md（理由：<spawn 判定结果>）]            # 仅 spawn 判定触发
+[💡 建议 spawn result.md（理由：<spawn 判定结果>）]                # 仅 spawn 判定触发
 ```
+
+> 三者互斥：同一次回报最多出现一行 `[💡 建议 spawn ...]`，按 **outline > synthesis > result** 优先级保留最高的一条（先骨架后判断后成稿）。
 
 ---
 
@@ -415,6 +420,6 @@ research workspace: info/research/<research-name>/
 
 ## 相关文件
 
-- 同 skill 模板：`sources.md` / `notes.md` / `attachments.md` / `synthesis.md` / `outline.md`
+- 同 skill 模板：`sources.md` / `notes.md` / `attachments.md` / `synthesis.md` / `outline.md` / `result.md` / `question.md`
 - 父 SKILL.md：`info-research/SKILL.md`
 - 关联设计：`lujunhui-2nd-digital-garden/ideas/info-research-triage/conclusion.md` 结论 5-8（R-flex）+ 结论 9-13（workspace）
