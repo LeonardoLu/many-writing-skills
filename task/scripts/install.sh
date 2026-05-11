@@ -8,7 +8,7 @@
 #      for each requested tool.
 #
 # Usage:
-#   task/scripts/install.sh --vault <path> [--tool cursor|codex|claude|all] [--dry-run]
+#   task/scripts/install.sh --vault <path> [--tool cursor|codex|claude|agents|all] [--dry-run]
 
 set -euo pipefail
 
@@ -36,9 +36,9 @@ done
 [[ -d "$VAULT" ]] || { echo "Error: vault not found: $VAULT" >&2; exit 1; }
 
 case "$TOOL" in
-  all) TOOLS=(cursor codex claude) ;;
-  cursor|codex|claude) TOOLS=("$TOOL") ;;
-  *) echo "Error: unknown --tool: $TOOL (allowed: cursor, codex, claude, all)" >&2; exit 1 ;;
+  all) TOOLS=(cursor codex claude agents) ;;
+  cursor|codex|claude|agents) TOOLS=("$TOOL") ;;
+  *) echo "Error: unknown --tool: $TOOL (allowed: cursor, codex, claude, agents, all)" >&2; exit 1 ;;
 esac
 
 prepare_args=(--vault "$VAULT")

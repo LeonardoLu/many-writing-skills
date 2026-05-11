@@ -8,7 +8,7 @@
 #
 # Usage:
 #   scripts/install.sh --vault <path>
-#                      [--tool cursor|codex|claude|all]
+#                      [--tool cursor|codex|claude|agents|all]
 #                      [--group <name>|all]
 #                      [--dry-run]
 #
