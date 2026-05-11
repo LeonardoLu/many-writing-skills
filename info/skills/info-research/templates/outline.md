@@ -4,10 +4,11 @@
 
 ## 1. 语义边界
 
-详见 `synthesis.md` 第 1 节"synthesis vs outline"对比表。本节不重复，仅强调：
+详见 `synthesis.md` 第 1 节"synthesis vs outline vs result"对比表。本节不重复，仅强调：
 
 - **outline = 章节级 H2 + 一句话提纲**；导向后续写作 / 进一步收敛
-- 与 synthesis 不互斥；可同时 spawn（先 outline 列骨架，再 synthesis 收结论）
+- 与 synthesis / result 不互斥（同 workspace 可并存）；可同时 spawn（先 outline 列骨架，再 synthesis 收结论，再 result 出成稿）
+- 但同一次 skill 调用按 **outline > synthesis > result** 优先级互斥，最多建议一个
 
 ## 2. spawn 判定 prompt（每次 skill 调用末尾跑）
 
@@ -41,10 +42,10 @@ spawn 判定：建议 spawn outline.md
 要 spawn 吗？回 `spawn` / `先不` / `稍后`。
 ```
 
-判定与 synthesis 同时跑：
+判定与 synthesis / result 同时跑：
 
-- 优先级：synthesis vs outline 同时命中时，先建议 outline（先骨架后判断）
-- 互斥规则：同一次 skill 调用，最多建议 spawn 一个（避免一次回报里堆两个建议增加用户决策成本）；下次调用再触发另一个
+- 优先级：outline > synthesis > result（先骨架后判断后成稿）；同时命中时先建议 outline
+- 互斥规则：同一次 skill 调用，最多建议 spawn 一个（避免一次回报里堆多个建议增加用户决策成本）；下次调用再触发其它的
 
 ## 3. 用户确认后的生成流程
 
@@ -152,7 +153,7 @@ spawn 完成后：
 - ❌ 用户没确认就主动创建 outline.md（仅"建议"）
 - ❌ 把"结论"放第 1 章（应当按论证流排序）
 - ❌ 章节标题写成问句（应当是名词短语）
-- ❌ 一次回报里同时建议 spawn synthesis + outline（应当互斥，按优先级先建议 outline）
+- ❌ 一次回报里同时建议 spawn outline + synthesis + result（应当互斥，按 outline > synthesis > result 优先级先建议 outline）
 - ❌ 章节没有"一句话提纲"或没有 wikilink（应当跳过该章或补来源）
 - ❌ update 模式下整文件 rebuild（应当按章差异 patch）
-- ❌ 反向引用 / 串联 synthesis.md（如同时存在，由用户自行串联，本 skill 不强联动）
+- ❌ 反向引用 / 串联 synthesis.md / result.md（如同时存在，由用户自行串联，本 skill 不强联动）

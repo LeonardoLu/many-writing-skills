@@ -2,20 +2,20 @@
 
 > 本模板规范 `<vault>/info/research/<research-name>/synthesis.md` 的 spawn 判定 + 语义边界 + 内容生成。**唯一目标**：在 notes.md 散点积累到"该收敛"时，由 LLM 主动建议 spawn synthesis.md（综合判断），用户确认后生成。
 
-## 1. 语义边界（synthesis vs outline）
+## 1. 语义边界（synthesis vs outline vs result）
 
 按 conclusion 结论 13 + plan 留 plan 阶段细化项：
 
-| | synthesis | outline |
-| --- | --- | --- |
-| **本质** | 综合判断 | 论证骨架 |
-| **结构** | 主结论 + 关键支撑 + 边界 / 反例 | 章节级 H2 + 一句话提纲 |
-| **触发信号** | notes 出现"综合来看 / 总结 / 主结论"等收敛词；同一观点反复出现凝固 | notes 出现"骨架 / 章节 / 大纲 / 先列再展开"等结构词；用户多次提及"想写一篇" |
-| **对比** | 答"我得出了什么结论" | 答"我准备怎么组织" |
-| **可独立** | 是（自含一个研究的结论） | 否（通常导向后续写作 / 进一步收敛） |
-| **典型读者** | 6 个月后翻这个 workspace 的自己 | 准备开始写正文的自己 |
+| | synthesis | outline | result |
+| --- | --- | --- | --- |
+| **本质** | 综合判断 | 论证骨架 | 成品长文 |
+| **结构** | 主结论 + 关键支撑 + 边界 / 反例 | 章节级 H2 + 一句话提纲 | 完整可读的报告 / 论文 / 综述 / 长文 |
+| **触发信号** | notes 出现"综合来看 / 总结 / 主结论"等收敛词；同一观点反复出现凝固 | notes 出现"骨架 / 章节 / 大纲 / 先列再展开"等结构词；用户多次提及"想写一篇" | notes 出现"成稿 / 出报告 / 写完它 / 终稿"等成稿词；sources ≥ 8 条 |
+| **对比** | 答"我得出了什么结论" | 答"我准备怎么组织" | 答"我已经写完了一份可发的稿" |
+| **可独立** | 是（自含一个研究的结论） | 否（通常导向后续写作 / 进一步收敛） | 是（自含完整成稿） |
+| **典型读者** | 6 个月后翻这个 workspace 的自己 | 准备开始写正文的自己 | 外部读者（同事 / 同行 / 读者） |
 
-两者**不互斥**：可同时 spawn（先 outline 列骨架，再 synthesis 收结论）；也可只 spawn 一个；用户可主动要求 spawn 任一。
+三者**不互斥**：可同时 spawn（先 outline 列骨架，再 synthesis 收结论，再 result 出成稿）；也可只 spawn 一个；用户可主动要求 spawn 任一。但**同一次 skill 调用最多建议 spawn 一个**，按 **outline > synthesis > result** 优先级互斥。
 
 ## 2. spawn 判定 prompt（每次 skill 调用末尾跑）
 
@@ -50,6 +50,11 @@ spawn 判定：建议 spawn synthesis.md
 
 要 spawn 吗？回 `spawn` / `先不` / `稍后`。
 ```
+
+互斥规则（与 outline / result 协同）：
+
+- 同一次 skill 调用同时命中 synthesis / outline / result → 按 **outline > synthesis > result** 顺序，**只**建议优先级最高的一个
+- 即：outline 也命中 → 建议 outline 而非 synthesis；synthesis 与 result 都命中 → 建议 synthesis 而非 result
 
 ## 3. 用户确认后的生成流程
 
@@ -152,5 +157,5 @@ spawn 完成后：
 - ❌ spawn 时把 notes.md 全文直接 copy 进 synthesis（应当抽取 + 重组）
 - ❌ synthesis 里的主结论用问句（应当是断言）
 - ❌ 关键支撑没有 wikilink 来源（应当跳过该支撑或补来源）
-- ❌ 反向链接 / 引用 outline.md（如同时存在，由用户自行串联，本 skill 不强联动）
+- ❌ 反向链接 / 引用 outline.md / result.md（如同时存在，由用户自行串联，本 skill 不强联动）
 - ❌ update 模式下整文件 rebuild（应当按段差异 patch）
